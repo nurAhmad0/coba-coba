@@ -1,6 +1,7 @@
 import psycopg2 
 import pandas as pd
 from tabulate import tabulate
+import datetime
 
 def koneksiDB():
     nilaihost = 'localhost'
@@ -60,8 +61,8 @@ def pilihan_login_cust():
 
 
 def loginadmin():
+    kursor, conn = koneksiDB()
     while True:
-        kursor, conn = koneksiDB()
         username_admin = input('Masukkan Username Anda: ')
         password_admin = input('Masukkan Password Anda: ')
         query = "select id_akun from akun where username = %s and password = %s and role_id_role = 1"
@@ -78,10 +79,13 @@ def loginadmin():
                 print('======LOGIN GAGAL======\nKesalahan Pada Username atau Password, Silahkan Ulangi Lagi')
         except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
+        finally:
+            kursor.close()
+            conn.close()
 
 def logincustomer():
+    kursor, conn = koneksiDB()
     while True:
-        kursor, conn = koneksiDB()
         username_customer = input('Masukkan Username Anda: ')
         password_customer = input('Masukkan Password Anda: ')
         query = "select id_akun from akun where username = %s and password = %s and role_id_role = 3"
@@ -98,13 +102,15 @@ def logincustomer():
                 print('======LOGIN GAGAL======\nKesalahan Pada Username atau Password, Silahkan Ulangi Lagi')
         except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
-
+        finally:
+            kursor.close()
+            conn.close()
 def loginkaryawan():
+    kursor, conn = koneksiDB()
     while True:
-        kursor, conn = koneksiDB()
         username_karyawan = input('Masukkan Username Anda: ')
         password_karyawan = input('Masukkan Password Anda: ')
-        query = "select id_akun from akun where username = %s and password = %s and role_id_role = 3"
+        query = "select id_akun from akun where username = %s and password = %s and role_id_role = 2"
         try:
             kursor.execute(query, (username_karyawan, password_karyawan))
             cek_akun = kursor.fetchone()
@@ -118,6 +124,9 @@ def loginkaryawan():
                 print('======LOGIN GAGAL======\nKesalahan Pada Username atau Password, Silahkan Ulangi Lagi')
         except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
+        finally:
+            kursor.close()
+            conn.close()
 
 def cek_username(username):
     kursor, conn = koneksiDB()
@@ -125,33 +134,52 @@ def cek_username(username):
     while True:
         try:
             query = "select * from akun where username = %s"
-            kursor.execute(query, (username))
+            kursor.execute(query, (username,))
             cocok = kursor.fetchone()
-            if cocok is not none:
-                print('Username Tidak Sesuai')
-                username = input('Masukkan Username: ')
-                continue
             if any(s in username for s in simbol):
+                print('Username Tidak Sesuai Harus Terdiri Dari Huruf dan Angka')
+                username = input('Masukkan Username: ')
+                continue
+            if len(username) < 2:
+                print("Username minimal 3 karakter")
+                username = input("Masukkan Username: ")
+                continue
+            if not username.strip():
+                print("Username tidak boleh kosong atau spasi saja!")
+                username = input("Masukkan Username: ")
+                continue
+            if cocok is not None:
                 print('Username Tidak Sesuai')
                 username = input('Masukkan Username: ')
                 continue
+        except Exception as e:
+            print(f"Terjadi Kesalahan : {e}")
         break
+    kursor.close()
+    conn.close()
     return username
 
 def cek_password(password):
     while True:
-        if len(password) < 6:
-            print('Password  Minimal 6 Karater')
-            password = input('Masukkan Password Anda: ')
-            continue
-        if password.isalpha() == True:
-            print('Password Gabungan Huruf dan Angka')
-            password = input('Masukkan Password Anda: ')
-            continue
-        if password.isnumeric() == True:
-            print('Password Gabungan Huruf dan Angka')
-            password = input('Masukkan Password Anda: ')
-            continue
+        try:
+            if not password.strip():
+                print("Password tidak boleh kosong atau spasi saja!")
+                password = input("Masukkan Password Anda: ")
+                continue
+            if len(password) < 6:
+                print('Password  Minimal 6 Karater')
+                password = input('Masukkan Password Anda: ')
+                continue
+            if password.isalpha():
+                print('Password Gabungan Huruf dan Angka')
+                password = input('Masukkan Password Anda: ')
+                continue
+            if password.isnumeric():
+                print('Password Gabungan Huruf dan Angka')
+                password = input('Masukkan Password Anda: ')
+                continue
+        except:
+            print('Input tidak Valid')
         break
     return password
 
@@ -162,21 +190,30 @@ def cek_email(email):
                 print('Email harus mengunakan @gmail.com')
                 email = input('Masukkan Email Anda: ')
                 continue
+            if not email.strip():
+                print("Email tidak boleh kosong atau spasi saja!")
+                email = input("Masukkan Email Anda: ")
+                continue
             break
-        except:
-            print('Inputan Tidak Valid')
+        except Exception as e:
+            print(f"Terjadi kesalahan: {e}")
+            email = input("Masukkan Email Anda: ")
     return email
 
 def cek_no_telp(no_telp):
     while True:
         try:
+            if not no_telp.strip():
+                print("Email tidak boleh kosong atau spasi saja!")
+                no_telp = input("Masukkan NO Telp Anda: ")
+                continue
             if not (len(no_telp) >= 10 and len(no_telp) <= 13):
                 print('Nomer Telp harus 10-13 digit')
-                no_telp = input('Masukkan NO TELPON Anda: ')
+                no_telp = input('Masukkan NO Telp Anda: ')
                 continue
             if no_telp.isalpha() == False:
                 print('Nomer Telp harus angka semua')
-                no_telp = input('Masukkan NO TELPON Anda: ')
+                no_telp = input('Masukkan NO Telp Anda: ')
                 continue
             break
         except:
@@ -186,8 +223,8 @@ def cek_no_telp(no_telp):
 
 
 def buat_akun_customer():
+    kursor, conn = koneksiDB()
     while True:
-        kursor, conn = koneksiDB()
         username_customer = input('Masukkan Username Anda: ')
         password_customer = input('Masukkan Password Anda: ')
         gmail_customer = input('Masukkan Email Anda: ')
@@ -213,6 +250,101 @@ def buat_akun_customer():
             conn.rollback()
             print(f"Terjadi Kesalahan : {e}")
 
+def menu_admin(idakun):
+    print('======MENU ADMIN======')
+    print("""
+    (1). Melihat Produk
+    (2). Memperbarui Produk
+    (3). Laporan
+    (4). Melihat pesanan
+    (5). Melihat Detail Pesanan
+    (6). Detail Karyawan
+    (7). Diskon
+    (8). Exit
+    """)
+    while True:
+        input_admin = input('Pilih Menu Yang Diinginkan >> ')
+        if input_admin == '1':
+            lihat_produkA(idakun)
+        elif input_admin == '2':
+            perbarui_produk(idakun)
+        elif input_admin == '3':
+            laporan(idakun)
+        elif input_admin == '4':
+            lihat_pesanan(idakun)
+        elif input_admin == '5':
+            lihat_detail_pesanan(idakun)
+        elif input_admin == '6':
+            detail_karyawan(idakun)
+        elif input_admin == '7':
+            diskon(idakun)
+        elif input_admin == '8':
+            break
+        else:
+            print("Pilihan Tidak Ada")
+
+def lihat_produkA(idakun):
+    try:
+        kursor, conn = koneksiDB()
+        query = "select * from produk order by status_produk"
+        kursor.execute(query)
+        data = kursor.fetchall()
+        header= [d[0]for d in kursor.description]
+        print (tabulate(data, headers=header, tablefmt='psql'))
+    except Exception as e:
+        print(f"Terjadi Kesalahan : {e}")
+
+def lihat_pesanan(idakun):
+    try:
+        kursor, conn = koneksiDB()
+        query = "select * from pesanan"
+        kursor.execute(query)
+        data = kursor.fetchall()
+        header= [d[0]for d in kursor.description]
+        print (tabulate(data, headers=header, tablefmt='psql'))
+    except Exception as e:
+        print(f"Terjadi Kesalahan : {e}")
+
+def lihat_detail_pesanan(idakun):
+    try:
+        kursor, conn = koneksiDB()
+        query = "select * from detail_pesanan"
+        kursor.execute(query)
+        data = kursor.fetchall()
+        header= [d[0]for d in kursor.description]
+        print (tabulate(data, headers=header, tablefmt='psql'))
+    except Exception as e:
+        print(f"Terjadi Kesalahan : {e}")
+
+def detail_karyawan(idakun):
+    kursor, conn = koneksiDB()
+    query = "select * from karyawan"
+    while True:
+        try:
+            kursor.execute(query)
+            data = kursor.fetchall()
+            header= [d[0]for d in kursor.description]
+            print (tabulate(data, headers=header, tablefmt='psql'))
+            print('=====MENU KARYAWAN=====')
+            print("""
+            (1). Melihat Karyawan yang Masih Bekerja
+            (2). Menambahkan Karyawan
+            (3). Memecat Karyawan
+            (4). Exit
+            """)
+            data = input('Masukkan Pilihan Menu >> ')
+            if data == '1':
+                lihat_karyawan(idakun)
+            elif data == '2':
+                tambah_karyawan(idakun)
+            elif data == '3':
+                pecat_karaywan(idakun)
+            elif data == '4':
+                break
+            else:
+                print('Pilihan Tidak Ada')
+        except Exception as e:
+            print(f"Terjadi Kesalahan : {e}")
 
 
 
@@ -251,7 +383,9 @@ def buat_akun_customer():
 
 
 
-konto
+
+
+
 
 
 
