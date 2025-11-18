@@ -134,9 +134,6 @@ def cek_username(username):
     simbol =['!','@','#','$','%','^','&','*','(',')',',']
     while True:
         try:
-            query = "select * from akun where username = %s"
-            kursor.execute(query, (username,))
-            cocok = kursor.fetchone()
             if any(s in username for s in simbol):
                 print('Username Tidak Sesuai Harus Terdiri Dari Huruf dan Angka')
                 username = input('Masukkan Username: ')
@@ -149,6 +146,9 @@ def cek_username(username):
                 print("Username tidak boleh kosong atau spasi saja!")
                 username = input("Masukkan Username: ")
                 continue
+            query = "select * from akun where username = %s"
+            kursor.execute(query, (username,))
+            cocok = kursor.fetchone()
             if cocok is not None:
                 print('Username Tidak Sesuai')
                 username = input('Masukkan Username: ')
@@ -159,6 +159,37 @@ def cek_username(username):
     kursor.close()
     conn.close()
     return username
+
+def cek_nama_produk(nama_produk):
+    kursor, conn = koneksiDB()
+    simbol =['!','@','#','$','%','^','&','*','(',')',',']
+    while True:
+        try:
+            if any(s in nama_produk for s in simbol):
+                print('nama_produk Tidak Sesuai Harus Terdiri Dari Huruf dan Angka')
+                username = input('Masukkan nama_produk: ')
+                continue
+            if len(nama_produk) < 2:
+                print("nama_produk minimal 3 karakter")
+                username = input("Masukkan nama_produk: ")
+                continue
+            if not nama_produk.strip():
+                print("nama_produk tidak boleh kosong atau spasi saja!")
+                username = input("Masukkan nama_produk: ")
+                continue
+            query = "select * from produk where nama_produk = %s"
+            kursor.execute(query, (nama_produk,))
+            cocok = kursor.fetchone()
+            if cocok is not None:
+                print('nama_produk Sudah Dipakai')
+                nama_produk = input('Masukkan nama_produk: ')
+                continue
+        except Exception as e:
+            print(f"Terjadi Kesalahan : {e}")
+        break
+    kursor.close()
+    conn.close()
+    return nama_produk
 
 def cek_password(password):
     while True:
@@ -198,30 +229,105 @@ def cek_email(email):
             break
         except Exception as e:
             print(f"Terjadi kesalahan: {e}")
-            email = input("Masukkan Email Anda: ")
     return email
 
 def cek_no_telp(no_telp):
     while True:
         try:
+            if no_telp.isalpha() == False:
+                print('Nomer Telp harus angka semua')
+                no_telp = input('Masukkan NO Telp Anda: ')
+                continue
             if not no_telp.strip():
-                print("Email tidak boleh kosong atau spasi saja!")
+                print("Nomer Telp tidak boleh kosong atau spasi saja!")
                 no_telp = input("Masukkan NO Telp Anda: ")
                 continue
             if not (len(no_telp) >= 10 and len(no_telp) <= 13):
                 print('Nomer Telp harus 10-13 digit')
                 no_telp = input('Masukkan NO Telp Anda: ')
                 continue
-            if no_telp.isalpha() == False:
-                print('Nomer Telp harus angka semua')
-                no_telp = input('Masukkan NO Telp Anda: ')
-                continue
             break
-        except:
-            print('Inputan Tidak Valid')
+        except Exception as e:
+            print(f"Terjadi kesalahan: {e}")
     return no_telp
 
+def cek_tanggal(tanggal):
+    while True:
+        try:
+            if not tanggal.strip():
+                print("Tanggal Tidak Boleh Kosong")
+                tanggal = questionary.text("Tanggal: ").ask()
+                continue
+            tanggal = int(tanggal)
+            if not(tanggal in range(1,32)):
+                print('Tanggal Yang Anda Harus 1-31')
+                tanggal = questionary.text("Tanggal: ").ask()
+                continue
+            break
+        except Exception as e:
+            print(f"Terjadi kesalahan: {e}")
+            print('Tanggal Harus Angka')
+            tanggal = questionary.text("Tanggal: ").ask()
+    return tanggal
 
+def cek_bulan(bulan):
+    while True:
+        try:
+            if not bulan.strip():
+                print("bulan Tidak Boleh Kosong")
+                bulan = questionary.text("bulan: ").ask()
+                continue
+            bulan = int(bulan)
+            if not(bulan in range(1,13)):
+                print('bulan Yang Anda Harus 1-12')
+                bulan = questionary.text("bulan: ").ask()
+                continue
+            break
+        except Exception as e:
+            print(f"Terjadi kesalahan: {e}")
+            print('Tanggal Harus Angka')
+            bulan = questionary.text("bulan: ").ask()
+    return bulan
+
+def cek_tahun(tahun):
+    while True:
+        try:
+            if not tahun.strip():
+                print("Tahun tidak boleh kosong atau spasi saja")
+                tahun = questionary.text("Tanggal: ").ask()
+                continue
+            tahun = int(tahun)
+            tanggal_sekarang = datetime.date.today()
+            tahun_saja = tanggal_sekarang.year
+            if tahun <= tahun_saja:
+                print('Tahun Yang Anda Masukkan Salah')
+                tahun = questionary.text("Tanggal: ").ask()
+                continue
+            break
+        except Exception as e:
+            print(f"Terjadi kesalahan: {e}")
+            print('Tahun Harus Berupa Angka')
+            tahun = questionary.text("Tanggal: ").ask()
+    return tahun
+
+def cek_harga(harga):
+    while True:
+        try:
+            if not harga.strip():
+                print('Harga Tidak Boleh Kosong') 
+                harga = (input('Masukkan Harga Produk(ex:3000): '))
+                continue
+            harga = int(harga)
+            if len(harga) > 4:
+                print('Harga Terlalu Rendah')
+                harga = (input('Masukkan Harga Produk(ex:3000): '))
+                continue
+            if harga.isnumeric() == False:
+                print('Harga harus terdiri dari angka')
+                harga = (input('Masukkan Harga Produk(ex:3000): '))
+        except:
+            print('Harga harus terdiri dari angka')
+            harga = (input('Masukkan Harga Produk(ex:3000): '))
 
 def buat_akun_customer():
     kursor, conn = koneksiDB()
@@ -339,7 +445,7 @@ def detail_karyawan(idakun):
             elif data == '2':
                 tambah_karyawan(idakun)
             elif data == '3':
-                pecat_karaywan(idakun)
+                pecat_karyawan(idakun)
             elif data == '4':
                 break
             else:
@@ -391,25 +497,19 @@ def pecat_karyawan(idakun):
             kursor.execute(query3, (admin_input,))
             conn.commit()
             print('Pemecatan Berhasil')
-            kursor.execute(query1)
-            data = kursor.fetchall()
-            header= [d[0]for d in kursor.description]
-            print (tabulate(data, headers=header, tablefmt='psql'))
             break
     except Exception as e:
         print(f"Terjadi Kesalahan : {e}")
     finally:
         kursor.close()
         conn.close()
-        
-def cek_tanggal(tanggal):
 
 
 def tambah_karyawan(idakun):
     kursor, conn = koneksiDB()
     while True:
         nama_karyawan = input('Masukkan Nama Karyawan: ')
-        ttl_karyawan = input('Masukan tanggal lahir: ')
+        ttl_karyawan = tanggal_karyawan()
         email_karyawan = input('Masukkan email karyawan: ')
         no_telp_karyawan = input('Masukkan NO Telp karyawan: ')
         password_karyawan = input('Masukkan Password karyawan: ')
@@ -447,12 +547,183 @@ def tambah_karyawan(idakun):
             kursor.close()
             conn.close()
 
+def tanggal_karyawan():
+    tanggal = questionary.text("Tanggal: ").ask()
+    bulan = questionary.text("Bulan: ").ask()
+    tahun = questionary.text("Tahun: ").ask()
+    try:
+        tanggal = cek_tanggal(tanggal)
+        bulan = cek_bulan(bulan)
+        tahun = cek_tahun(tahun)
+        karyawan_date = datetime.date(tahun, bulan, tanggal)
+        return karyawan_date
+    except Exception as e:
+            print(f"Terjadi Kesalahan : {e}")
+
+def perbarui_produk(idakun):
+    kursor, conn = koneksiDB()
+    query1 = "select id_produk, nama_produk, harga, stock from produk where status_produk = 'Aktif' order by id_produk;"
+    query2 = "select * from produk where status_produk = 'Tidak Aktif' order by id_produk;"
+    query3 = "update produk set status_produk = 'Aktif' where id_produk = %s"
+    query4 = "update produk set status_produk = 'Tidak Aktif' where id_produk = %s"
+    try:
+        while True:
+            print('=====PRODUK DIJUAL=====')
+            kursor.execute(query1)
+            data = kursor.fetchall()
+            header= [d[0]for d in kursor.description]
+            print (tabulate(data, headers=header, tablefmt='psql'))
+            print('=====PILIH MENU PRODUK=====')
+            print('(1). Hapus Produk\n(2). Kembalikan Produk\n(3). Tambah Produk\n(4). Exit')
+            admin_input = input('Masukkan Pilihan Anda >> ')
+            if admin_input == '1':
+                hapus_produk(idakun)
+                continue
+            elif admin_input == '2':
+                kembali_produk(idakun)
+                continue
+            elif admin_input == '3':
+                tambah_produk(idakun)
+                continue
+            elif admin_input == '4':
+                break
+            else:
+                print('Pilhan Tidak Ada')
+    except Exception as e:
+            print(f"Terjadi Kesalahan : {e}")
+    kursor.close()
+    conn.close()
+
+
+
+def hapus_produk(idakun):
+    kursor, conn = koneksiDB()
+    query1 = "select id_produk, nama_produk, harga, stock from produk where status_produk = 'Aktif' order by id_produk;"
+    query2 = "select id_produk from produk where status_produk = 'Aktif' order by id_produk;"
+    query3 = "update produk set status_produk = 'Tidak Aktif' where id_produk = %s"
+    while True:
+        try:
+            kursor.execute(query1)
+            data = kursor.fetchall()
+            header= [d[0]for d in kursor.description]
+            print(tabulate(data, headers=header, tablefmt='psql'))
+            kursor.execute(query2)
+            data = kursor.fetchall()
+            data_list = [i[0] for i in data]
+            print('===PILIH ID PRODUK YANG MAU DIUBAH===')
+            for i in data:
+                print(f'id karyawan {i[0]}')
+            while True:
+                try:
+                    admin_input = int(input('Pilih Id Produk yang mau dihilangkan: '))
+                    while True:
+                        if admin_input not in data_list:
+                            print('Id Karyawan yang anda masukkan salah')
+                            admin_input = int(input('Pilih Id Produk yang mau dihilangkan: '))
+                            continue
+                        break
+                except ValueError:
+                    print("Input harus berupa angka!")
+                    continue
+                break
+            kursor.execute(query3, (admin_input,))
+            conn.commit()
+            print('Penghapusan Berhasil')
+        except Exception as e:
+            print(f"Terjadi Kesalahan : {e}")
+        finally:
+            kursor.close()
+            conn.close()
+
+
+def kembali_produk(idakun):
+    kursor, conn = koneksiDB()
+    query1 = "select id_produk, nama_produk, harga, stock from produk where status_produk = 'Tidak Aktif' order by id_produk;"
+    query2 = "select id_produk from produk where status_produk = 'Tidak Aktif' order by id_produk;"
+    query3 = "update produk set status_produk = 'Aktif' where id_produk = %s"
+    while True:
+        try:
+            kursor.execute(query1)
+            data = kursor.fetchall()
+            header= [d[0]for d in kursor.description]
+            print(tabulate(data, headers=header, tablefmt='psql'))
+            kursor.execute(query2)
+            data = kursor.fetchall()
+            data_list = [i[0] for i in data]
+            print('===PILIH ID PRODUK YANG MAU DIUBAH===')
+            for i in data:
+                print(f'id karyawan {i[0]}')
+            while True:
+                try:
+                    admin_input = int(input('Pilih Id Produk yang mau dikembalikan: '))
+                    while True:
+                        if admin_input not in data_list:
+                            print('Id Karyawan yang anda masukkan salah')
+                            admin_input = int(input('Pilih Id Produk yang mau dikembalikan: '))
+                            continue
+                        break
+                except ValueError:
+                    print("Input harus berupa angka!")
+                    continue
+                break
+            kursor.execute(query3, (admin_input,))
+            conn.commit()
+            print('Pengembalian Berhasil')
+        except Exception as e:
+            print(f"Terjadi Kesalahan : {e}")
+        finally:
+            kursor.close()
+            conn.close()
+
+
+
+def tambah_produk(idakun):
+    kursor, conn = koneksiDB()
+    nama_produk = input('Masukkan Nama Produk Yang Mau Ditambahkan: ')
+    harga = input('Masukkan Harga Produk: ')
+    query = "insert into produk (nama_produk, harga, stock, status_produk) values (%s, %s, 0, 'Aktif)"
+    while True:
+        try:
+            nama_produk = cek_nama_produk(nama_produk)
+            harga = cek_harga(harga)
+            kursor.execute(query)
+            conn.commit()
+            print('Penambahan Produk Berhasil')
+        except Exception as e:
+            print(f"Terjadi Kesalahan : {e}")
+        finally:
+            kursor.close()
+            conn.close()
 
 
 
 
-
-
+kursor.execute(query1)
+            data = kursor.fetchall()
+            header= [d[0]for d in kursor.description]
+            print (tabulate(data, headers=header, tablefmt='psql'))
+            kursor.execute(query2)
+            data = kursor.fetchall()
+            data_list = [i[0] for i in data]
+            print('======Id Karyawan======')
+            for i in data:
+                print(f'id karyawan {i[0]}')
+            while True:
+                try:
+                    admin_input = int(input('Pilih Id Produk yang mau dihilangkan: '))
+                    while True:
+                        if admin_input not in data_list:
+                            print('Id Karyawan yang anda masukkan salah')
+                            admin_input = int(input('Pilih Id Produk yang mau dihilangkan: '))
+                            continue
+                        break
+                except ValueError:
+                    print("Input harus berupa angka!")
+                    continue
+                break
+            kursor.execute(query3, (admin_input,))
+            conn.commit()
+            print('Pemecatan Berhasil')
 
 
 
@@ -508,4 +779,3 @@ def tambah_karyawan(idakun):
 # df = pd.read_sql(query, conn)
 # conn.close()
 # print(df.head())
-
