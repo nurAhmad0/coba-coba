@@ -2,6 +2,7 @@ import psycopg2
 import pandas as pd
 from tabulate import tabulate
 import datetime
+import questionary
 
 def koneksiDB():
     nilaihost = 'localhost'
@@ -318,7 +319,7 @@ def lihat_detail_pesanan(idakun):
 
 def detail_karyawan(idakun):
     kursor, conn = koneksiDB()
-    query = "select * from karyawan"
+    query = "select * from karyawan where status_karyawan = 'Aktif' and jabatan_id_jabata <> 'owner'"
     while True:
         try:
             kursor.execute(query)
@@ -327,7 +328,7 @@ def detail_karyawan(idakun):
             print (tabulate(data, headers=header, tablefmt='psql'))
             print('=====MENU KARYAWAN=====')
             print("""
-            (1). Melihat Karyawan yang Masih Bekerja
+            (1). Melihat Semua Karyawan
             (2). Menambahkan Karyawan
             (3). Memecat Karyawan
             (4). Exit
@@ -346,8 +347,105 @@ def detail_karyawan(idakun):
         except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
 
+def lihat_karyawan(idakun):
+    try:
+        kursor, conn = koneksiDB()
+        query = "select * from karyawan"
+        kursor.execute(query)
+        data = kursor.fetchall()
+        header= [d[0]for d in kursor.description]
+        print (tabulate(data, headers=header, tablefmt='psql'))
+    except Exception as e:
+        print(f"Terjadi Kesalahan : {e}")
+
+def pecat_karyawan(idakun):
+    try:
+        kursor, conn = koneksiDB()
+        query1 = "select * from karyawan where status_karyawan = 'Aktif' and jabatan_id_jabata <> 5"
+        query2 = "select id_karyawan from karyawan where status_karyawan = 'Aktif' and jabatan_id_jabata <> 5"
+        query3 = "update karyawan set status_karyawan = 'Tidak Aktif' where id_karyawan = %s"
+        while True:
+            kursor.execute(query1)
+            data = kursor.fetchall()
+            header= [d[0]for d in kursor.description]
+            print (tabulate(data, headers=header, tablefmt='psql'))
+            kursor.execute(query2)
+            data = kursor.fetchall()
+            data_list = [i[0] for i in data]
+            print('======Id Karyawan======')
+            for i in data:
+                print(f'id karyawan {i[0]}')
+            while True:
+                try:
+                    admin_input = int(input('Pilih Id Karyawan yang mau dipecat: '))
+                    while True:
+                        if admin_input not in data_list:
+                            print('Id Karyawan yang anda masukkan salah')
+                            admin_input = int(input('Pilih Id Karyawan yang mau dipecat: '))
+                            continue
+                        break
+                except ValueError:
+                    print("Input harus berupa angka!")
+                    continue
+                break
+            kursor.execute(query3, (admin_input,))
+            conn.commit()
+            print('Pemecatan Berhasil')
+            kursor.execute(query1)
+            data = kursor.fetchall()
+            header= [d[0]for d in kursor.description]
+            print (tabulate(data, headers=header, tablefmt='psql'))
+            break
+    except Exception as e:
+        print(f"Terjadi Kesalahan : {e}")
+    finally:
+        kursor.close()
+        conn.close()
+        
+def cek_tanggal(tanggal):
 
 
+def tambah_karyawan(idakun):
+    kursor, conn = koneksiDB()
+    while True:
+        nama_karyawan = input('Masukkan Nama Karyawan: ')
+        ttl_karyawan = input('Masukan tanggal lahir: ')
+        email_karyawan = input('Masukkan email karyawan: ')
+        no_telp_karyawan = input('Masukkan NO Telp karyawan: ')
+        password_karyawan = input('Masukkan Password karyawan: ')
+        jabatan = questionary.select(
+        "Jabatan Karyawan:",
+        choices=["Pengantar", "Kasir", "kebersihan", "koki"]
+        ).ask()
+        if jabatan == "Pengantar":
+            jabatan_id = 1
+        elif jabatan == "kasir":
+            jabatan_id = 2
+        elif jabatan == "kebersihan":
+            jabatan_id = 3
+        elif jabatan == "koki":
+            jabatan_id = 4
+        nama_karyawan = cek_username(nama_karyawan)
+        password_karyawan = cek_password(password_karyawan)
+        email_karyawan = cek_email(email_karyawan)
+        no_telp_karyawan = cek_no_telp(no_telp_karyawan)
+        ttl_karyawan = cek_tanggal(ttl_karyawan)
+        query1 = "insert into karyawan (nama_karyawan, tanggal_lahir, email, no_telp, akun_id_akun, jabatan_id_jabatan) values (%s, %s, %s, %s, %s, %s);"
+        query2 = "insert into akun (username, password, role_id_role) values (%s, %s, 2) returning id_akun;"
+        try:
+            kursor.execute(query2, (nama_karyawan, password_karyawan))
+            cocokan = kursor.fetchone()
+            id_akun = cocokan[0]
+            kursor.execute(query1, (nama_karyawan, ttl_karyawan, email_karyawan, no_telp_karyawan, id_akun, jabatan_id))
+            conn.commit()
+            print('BUAT AKUN BERHASIL')
+            break
+        except Exception as e:
+            conn.rollback()
+            print(f"Terjadi Kesalahan : {e}")
+        finally:
+            kursor.close()
+            conn.close()
 
 
 
