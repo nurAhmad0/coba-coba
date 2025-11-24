@@ -128,6 +128,27 @@ def loginkaryawan():
             kursor.close()
             conn.close()
 
+def cek_nama(nama):
+    simbol =['!','@','#','$','%','^','&','*','(',')',',']
+    while True:
+        try:
+            if any(s in username for s in simbol):
+                print('Username Tidak Sesuai Harus Terdiri Dari Huruf dan Angka')
+                username = input('Masukkan Username: ')
+                continue
+            if len(username) < 2:
+                print("Username minimal 3 karakter")
+                username = input("Masukkan Username: ")
+                continue
+            if not username.strip():
+                print("Username tidak boleh kosong atau spasi saja!")
+                username = input("Masukkan Username: ")
+                continue
+        except Exception as e:
+            print(f"Terjadi Kesalahan : {e}")
+        break
+    return nama
+
 def cek_username(username):
     kursor, conn = koneksiDB()
     simbol =['!','@','#','$','%','^','&','*','(',')',',']
@@ -648,7 +669,7 @@ def tanggal_karyawan(idakun):
         tanggal = cek_tanggal(tanggal)
         bulan = cek_bulan(bulan)
         tahun = cek_tahun(tahun)
-        karyawan_date = datetime.date(tahun, bulan, tanggal)
+        karyawan_date = dt.date(tahun, bulan, tanggal)
         return karyawan_date
     except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
@@ -703,19 +724,17 @@ def hapus_produk(idakun):
             print('===PILIH ID PRODUK YANG MAU DIUBAH===')
             for i in data:
                 print(f'id karyawan {i[0]}')
-            while True:
-                try:
-                    admin_input = int(input('Pilih Id Produk yang mau dihilangkan: '))
-                    while True:
-                        if admin_input not in data_list:
-                            print('Id Karyawan yang anda masukkan salah')
-                            admin_input = int(input('Pilih Id Produk yang mau dihilangkan: '))
-                            continue
-                        break
-                except ValueError:
-                    print("Input harus berupa angka!")
-                    continue
-                break
+            try:
+                admin_input = int(input('Pilih Id Produk yang mau dihilangkan: '))
+                while True:
+                    if admin_input not in data_list:
+                        print('Id Karyawan yang anda masukkan salah')
+                        admin_input = int(input('Pilih Id Produk yang mau dihilangkan: '))                            
+                        continue
+                    break
+            except ValueError:
+                print("Input harus berupa angka!")
+                continue
             kursor.execute(query3, (admin_input,))
             conn.commit()
             print('Penghapusan Berhasil')
@@ -832,6 +851,7 @@ def ubah_harga(idakun):
             print('Perubahan Harga Berhasil')
         except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
+            continue
         ubah_lagi = questionary.select(
         "Apakah Mau Lanjut Ubah Harga:",
         choices=["Lanjut", "Tidak"]
@@ -845,19 +865,142 @@ def ubah_harga(idakun):
 
 def menu_customer(idakun):
     kursor, conn = koneksiDB()
-    query1 = "select nama_produk, harga from produk where status_produk = 'Aktif order by id_produk'"
+    query1 = "select id_produk, nama_produk, harga from produk where status_produk = 'Aktif order by id_produk'"
     while True:
         try:
             kursor.execute(query1)
             data = kursor.fetchall()
             header= [d[0]for d in kursor.description]
             print (tabulate(data, headers=header, tablefmt='psql'))
+            print("=====Menu Customer=====")
+            pilih_menu = questionary.select(
+            "Mau tambah Produk:",
+            choices=["Pilih Produk", "Lihat Pesanan", "Keluar"]
+            ).ask()
+            if pilih_menu == "Pilih Produk":
+                pesanan_customer(idakun)
+                continue
+            elif pilih_menu == "Lihat Pesanan":
+                continue
+            elif pilih_menu == "Keluar":
+                break
+        except Exception as e:
+            print(f"Terjadi Kesalahan : {e}")
+            continue
+
+def pesanan_customer(idakun):
+    kursor, conn = koneksiDB()
+    query1 = "select id_produk, nama_produk, harga from produk where status_produk = 'Aktif' order by id_produk"
+    query2 = "select id_produk from produk where status_produk = 'Aktif' order by id_produk"
+    query3 = "select nama_produk from produk where id_produk = %s"
+    query4 = "select stock from produk where id_produk = %s"
+    produk_dipesan = []
+    id_produk = []
+    jumlah = []
+    sisa_stock = []
+    while True:
+        try:
+            kursor.execute(query1)
+            data = kursor.fetchall()
+            header= [d[0]for d in kursor.description]
+            print (tabulate(data, headers=header, tablefmt='psql'))
+            kursor.execute(query2)
+            data = kursor.fetchall()
+            data_list = [i[0] for i in data]
+            print(f"Produk yang Sudah Dipesan : {produk_dipesan}")
+            print(f"Jumlah yang Sudah Dipesan : {jumlah}")
+            print('=====PILIH ID PRODUK YANG MAU DIPESAN=====')
+            while True:
+                try:
+                    customer_input = int(input('Masukkan ID Produk Yang Mau Dibeli >> '))
+                    if customer_input not in data_list:
+                        print('Inputan ID Produk Tidak valid')
+                        continue
+                    if customer_input in id_produk:
+                        print('ID Produk Sudah Dipilih')
+                        continue
+                    break
+                except:
+                    print("Input Harus Berupa ID Produk(angka)")
+                    continue
+            id_produk.append(customer_input)
+            kursor.execute(query3, (customer_input,))
+            data1 = kursor.fetchone()
+            produk_dipesan.append(data1[0])
+            kursor.execute(query4, (customer_input,))
+            data2 = kursor.fetchone()
+            jumlah_stock = data2[0]
+            while True:
+                try:
+                    banyak_produk = int(input('Masukkan Berapa Banyak yang mau dibeli >> '))
+                    if banyak_produk == 0:
+                        print('Pesanan Tidak Boleh 0')
+                        continue
+                    if banyak_produk>jumlah_stock:
+                        print('Stock Tiidak Mencukupi')
+                        continue
+                    break
+                except:
+                    print("Input Harus Berupa Angka")
+                    continue
+            jumlah.append(banyak_produk)
+            data_update = jumlah_stock - banyak_produk
+            sisa_stock.append(data_update)
+            lanjut_pilih = questionary.select(
+            "Mau tambah Produk:",
+            choices=["iya,Pilih lagi", "Tidak,Cukup sudah"]
+            ).ask()
+            if lanjut_pilih == "iya,Pilih lagi":
+                continue
+            elif lanjut_pilih == "Tidak,Cukup sudah":
+                transaksi_pesanan(idakun, produk_dipesan, jumlah, sisa_stock)
+                break
+        except Exception as e:
+            print(f"Terjadi Kesalahan : {e}")
+            continue
+    kursor.close()
+    conn.close()
+        
+def transaksi_pesanan(idakun, produk_dipesan, jumlah, sisa_stock):
+    kursor, conn = koneksiDB()
+    query = "select harga from produk where nama_produk = %s"
+    try:
+        banyak = len(produk_dipesan)
+        simpan_pesanan = []
+        harga_pesanan = 0
+        for i in range(banyak):
+            pesanan = [produk_dipesan[i], jumlah[i]]
+            simpan_pesanan.append(pesanan)
+            kursor.execute(query, (produk_dipesan[i],))
+            data = kursor.fetchone()
+            harga_produk = data[0]
+            harga_pesanan = harga_pesanan + (harga_produk * jumlah[i])
+        print(tabulate(simpan_pesanan, headers =["Produk","jumlah"]))
+        print(f'Total Harga Pesanan = {harga_pesanan}')
+        customer_pilih = questionary.select(
+            "Apakah sudaah benar Pesanan anda:",
+            choices=["iya,Sudah Benar", "Tidak"]
+            ).ask()
+        if customer_pilih == "iya,Sudah Benar":
+            nama_pemesan = input('Masukkan Pesanan Atas Nama >> ')
+            nama_pemesan = cek_nama(nama_pemesan)
+            alamat_pesanan = 
+            simpan_data(idakun, produk_dipesan, jumlah, sisa_stock, nama_pemesan)
+        elif customer_pilih == "Tidak":
+            pesanan_customer(idakun)
+    except Exception as e:
+            print(f"Terjadi Kesalahan : {e}")
+    kursor.close()
+    conn.close()
+
+            
 
 
 
 
 
 
+#bagaimana jika melebihi stock
 
 
 
