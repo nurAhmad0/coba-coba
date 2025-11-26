@@ -881,6 +881,7 @@ def menu_customer(idakun):
                 pesanan_customer(idakun)
                 continue
             elif pilih_menu == "Lihat Pesanan":
+                lihat_pesanan(idakun)
                 continue
             elif pilih_menu == "Keluar":
                 break
@@ -953,15 +954,92 @@ def pesanan_customer(idakun):
             if lanjut_pilih == "iya,Pilih lagi":
                 continue
             elif lanjut_pilih == "Tidak,Cukup sudah":
-                transaksi_pesanan(idakun, produk_dipesan, jumlah, sisa_stock)
+                transaksi_pesanan(idakun, produk_dipesan, jumlah, sisa_stock, id_produk)
                 break
         except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
             continue
     kursor.close()
     conn.close()
+
+def area_customer():
+    kursor, conn = koneksiDB()
+    query = "select id_area from area where nama_area = %s"
+    while True:
+        area_pilih = questionary.select(
+        "Masukkan Area Kecamatan Anda:",
+        choices=['Kaliwates', 'Sumbersari', 'Patrang', 'Ajung', 'Sukorambi', 'Rambipuji', 'Jenggawah', 'Pakusari', 'Arjasa', 'Panti', 'Mumbulsari', 'Mayang', 'Kalisat', 'Bangsalsari', 'Jelbuk', 'Sukowono', 'Umbulsari', 'Balung', 'Ledokombo', 'Silo', 'Semboro', 'Sumberbaru', 'Puger', 'Tanggul', 'Sumberjambe', 'Wuluhan', 'Ambulu', 'Tempurejo', 'Jombang', 'Kencong','Gumukmas']
+        ).ask()
+        try:
+            kursor.execute(query)
+            data = kursor.fetchone()
+            id_area_pesanan = data[0]
+            break
+        except Exception as e:
+            print(f"Terjadi Kesalahan : {e}")
+            continue
+    kursor.close()
+    conn.close()
+    return area_pilih, id_area_pesanan
         
-def transaksi_pesanan(idakun, produk_dipesan, jumlah, sisa_stock):
+def identitas_customer():
+    while True:
+        nama_pemesan = input('Masukkan Pesanan Atas Nama >> ')
+        nama_pemesan = cek_nama(nama_pemesan)
+        while True:
+            alamat_pesanan = input('Masukkan alamat tujuan Pesanan Secara Detail(ex:jalan ahmad yani): ')
+            if not alamat_pesanan.strip():
+                print("Alamat Pesanan tidak boleh kosong atau spasi saja!")
+                continue
+            break
+        area_pesanan, id_area_pesanan = area_customer()
+        metode_pembayaran = questionary.select(
+        "Pilih Metode Pembayaran",
+        choices=["Cash", "Transfer"]
+        ).ask()
+        print(f"Pesanan Atas Nama : {nama_pemesan}")
+        print(f"Alamat pesanan : {alamat_pesanan}")
+        print(f"Area Pesanan : {area_pesanan}")
+        print(f"Metode Pembayaran : {metode_pembayaran}")
+        detail_customer = questionary.select(
+        "Apakah Nama Pemesan, Alamat Pesanan, Area Pesanan, Metode Pesanan Sudah benar",
+        choices=["Benar", "Salah"]
+        ).ask()
+        if detail_customer == "benar":
+            if metode_pembayaran == 'Cash':
+                Status_Transaksi = "Belum Lunas"
+            elif metode_pembayaran == 'Transfer':
+                Status_Transaksi = "Lunas"
+            break
+        elif detail_customer == "Salah":
+            continue
+    return nama_pemesan, alamat_pesanan, id_area_pesanan, metode_pembayaran, Status_Transaksi
+            
+def struk_pesanan(nama_pemesan, alamat_pesanan, area_pesanan, metode_pembayaran, produk_dipesan, jumlah, harga_pesanan):
+    kursor, conn = koneksiDB()
+    query = "select harga from produk where nama_produk = %s"
+    try:
+        print(f"Nama Pemesan adalah {nama_pemesan}")
+        banyak = len(produk_dipesan)
+        simpan_pesanan = []
+        harga_pesanan = 0
+        for i in range(banyak):
+            kursor.execute(query, (produk_dipesan[i],))
+            data = kursor.fetchone()
+            harga_produk = data[0]
+            pesanan = [produk_dipesan[i], jumlah[i], harga_produk]
+            simpan_pesanan.append(pesanan)
+            harga_pesanan = harga_pesanan + (harga_produk * jumlah[i])
+        print(tabulate(simpan_pesanan, headers =["Produk","jumlah", "Harga Produk"]))
+        print(f'Total Harga Pesanan = {harga_pesanan}')
+        print(f"Alamat Pesanan Berada Di {alamat_pesanan} dan Berada di area {area_pesanan}")
+        print(f"Metode Pembayaran Menggunakan {metode_pembayaran}")
+    except Exception as e:
+            print(f"Terjadi Kesalahan : {e}")
+    kursor.close()
+    conn.close()
+
+def transaksi_pesanan(idakun, produk_dipesan, jumlah, sisa_stock, id_produk):
     kursor, conn = koneksiDB()
     query = "select harga from produk where nama_produk = %s"
     try:
@@ -982,10 +1060,10 @@ def transaksi_pesanan(idakun, produk_dipesan, jumlah, sisa_stock):
             choices=["iya,Sudah Benar", "Tidak"]
             ).ask()
         if customer_pilih == "iya,Sudah Benar":
-            nama_pemesan = input('Masukkan Pesanan Atas Nama >> ')
-            nama_pemesan = cek_nama(nama_pemesan)
-            alamat_pesanan = 
-            simpan_data(idakun, produk_dipesan, jumlah, sisa_stock, nama_pemesan)
+            nama_pemesan, alamat_pesanan, area_pesanan, metode_pembayaran, Status_Transaksi = identitas_customer()
+            struk_pesanan(nama_pemesan, alamat_pesanan, area_pesanan, metode_pembayaran, produk_dipesan, jumlah, harga_pesanan)
+            tanggal = dt.date.today()
+            simpan_data(idakun, produk_dipesan, jumlah, sisa_stock, nama_pemesan, alamat_pesanan, area_pesanan, metode_pembayaran, id_produk, tanggal, Status_Transaksi)
         elif customer_pilih == "Tidak":
             pesanan_customer(idakun)
     except Exception as e:
@@ -993,7 +1071,20 @@ def transaksi_pesanan(idakun, produk_dipesan, jumlah, sisa_stock):
     kursor.close()
     conn.close()
 
+def simpan_data(idakun, produk_dipesan, jumlah, sisa_stock, nama_pemesan, alamat_pesanan, id_area_pesanan, metode_pembayaran, id_produk, tanggal, Status_Transaksi):
+    kursor, conn = koneksiDB()
+    query1 = "insert into Transaksi (Status_Transaksi, tanggal Transaksi, Metode_Pembayaran) values (%s, %s, %s) returning ID_Transaksi;"
+    query2 = "insert into Alamat_Pesanan (Jalan_Pesanan, Area_ID_Area) values (%s, %s) returning ID_Transaksi;"
+    query3 = "insert into Pesanan (Nama_Pemesan, Status_Pesanan) values (%s, %s)"
+    query4 = "insert into Transaksi (Status_Transaksi, tanggal Transaksi, Metode_Pembayaran) values (%s, %s, %s)"
+    while True:
+        try: 
+            kursor.execute(query1, (Status_Transaksi, tanggal, metode_pembayaran))
             
+            id_transaksi = data[0]
+            kursor.execute(query2, (alamat_pesanan, id_area_pesanan))
+
+
 
 
 
@@ -1001,7 +1092,8 @@ def transaksi_pesanan(idakun, produk_dipesan, jumlah, sisa_stock):
 
 
 #bagaimana jika melebihi stock
-
+#cod atau bagaiaman kalau pesanan
+#kalau cod berari ubah dari belum bayatr menjadi sudah bayar
 
 
 
