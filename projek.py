@@ -186,16 +186,20 @@ def cek_nama_produk(nama_produk):
     while True:
         try:
             if any(s in nama_produk for s in simbol):
-                print('nama_produk Tidak Sesuai Harus Terdiri Dari Huruf dan Angka')
-                username = input('Masukkan nama_produk: ')
+                print('nama_produk Tidak Sesuai Harus Terdiri Dari Huruf')
+                nama_produk = input('Masukkan nama_produk: ')
                 continue
             if len(nama_produk) < 2:
                 print("nama_produk minimal 3 karakter")
-                username = input("Masukkan nama_produk: ")
+                nama_produk = input("Masukkan nama_produk: ")
+                continue
+            if nama_produk.isdigit():
+                print("Nama Tidak Boleh Ada Angka")
+                nama_produk = input("Masukkan nama_produk: ")
                 continue
             if not nama_produk.strip():
                 print("nama_produk tidak boleh kosong atau spasi saja!")
-                username = input("Masukkan nama_produk: ")
+                nama_produk = input("Masukkan nama_produk: ")
                 continue
             query = "select * from produk where nama_produk = %s"
             kursor.execute(query, (nama_produk,))
@@ -206,6 +210,7 @@ def cek_nama_produk(nama_produk):
                 continue
         except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
+            continue
         break
     kursor.close()
     conn.close()
@@ -288,6 +293,7 @@ def cek_tanggal(tanggal):
             print(f"Terjadi kesalahan: {e}")
             print('Tanggal Harus Angka')
             tanggal = questionary.text("Tanggal: ").ask()
+            continue
     return tanggal
 
 def cek_bulan(bulan):
@@ -307,6 +313,7 @@ def cek_bulan(bulan):
             print(f"Terjadi kesalahan: {e}")
             print('Tanggal Harus Angka')
             bulan = questionary.text("bulan: ").ask()
+            continue
     return bulan
 
 def cek_tahun(tahun):
@@ -314,20 +321,28 @@ def cek_tahun(tahun):
         try:
             if not tahun.strip():
                 print("Tahun tidak boleh kosong atau spasi saja")
-                tahun = questionary.text("Tanggal: ").ask()
+                tahun = questionary.text("Tahun: ").ask()
+                continue
+            if not tahun.isdigit():
+                print('Tahun Harus Berupa Angka')
+                tahun = questionary.text("Tahun: ").ask()
                 continue
             tahun = int(tahun)
+            if tahun >= tahun + 100:
+                print("tahun terlalu panjang")
+                tahun = questionary.text("Tahun: ").ask()
+                continue
             tanggal_sekarang = dt.date.today()
             tahun_saja = tanggal_sekarang.year
-            if tahun <= tahun_saja:
+            if tahun < tahun_saja:
                 print('Tahun Yang Anda Masukkan Salah')
-                tahun = questionary.text("Tanggal: ").ask()
+                tahun = questionary.text("Tahun: ").ask()
                 continue
             break
         except Exception as e:
             print(f"Terjadi kesalahan: {e}")
-            print('Tahun Harus Berupa Angka')
-            tahun = questionary.text("Tanggal: ").ask()
+            tahun = questionary.text("Tahun: ").ask()
+            continue
     return tahun
 
 def cek_harga(harga):
@@ -337,17 +352,20 @@ def cek_harga(harga):
                 print('Harga Tidak Boleh Kosong') 
                 harga = (input('Masukkan Harga Produk(ex:3000): '))
                 continue
+            if not harga.isnumeric():
+                print('Harga harus terdiri dari angka')
+                harga = (input('Masukkan Harga Produk(ex:3000): '))
+                continue
             harga = int(harga)
-            if len(harga) > 4:
+            if harga < 1000:
                 print('Harga Terlalu Rendah')
                 harga = (input('Masukkan Harga Produk(ex:3000): '))
                 continue
-            if harga.isnumeric() == False:
-                print('Harga harus terdiri dari angka')
-                harga = (input('Masukkan Harga Produk(ex:3000): '))
+            break
         except:
             print('Harga harus terdiri dari angka')
             harga = (input('Masukkan Harga Produk(ex:3000): '))
+    return harga
 
 def buat_akun_customer():
     kursor, conn = koneksiDB()
@@ -419,7 +437,7 @@ def menu_admin(idakun):
 
 def laporan(idakun):
     kursor, conn = koneksiDB()
-    query1 = "select p.nama_produk, sum(dp.harga * dp.quantity) as jumlah_terjual from produk p join detail_pesanan dp using (produk_id) where p.status_pruduk = 'Aktif' group by p.nama_produk order by sum(dp.harga * dp.quantity)"
+    query1 = "select p.nama_produk, sum(dp.harga * dp.jumlah_produk) as jumlah_terjual from produk p join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk where p.status_produk = 'Aktif' group by p.nama_produk order by jumlah_terjual desc"
     while True:
         try:
             kursor.execute(query1)
@@ -447,10 +465,12 @@ def laporan(idakun):
                 print('Pilihan Tidak Ada')
         except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
+    kursor.close()
+    conn.close()
 
 def produk_laris_1minggu(idakun):
     kursor, conn = koneksiDB()
-    query1 = "select p.nama_produk, sum(dp.harga * dp.quantity) as jumlah_terjual from produk p join detail_pesanan dp using (id_produk) where p.status_produk = 'Aktif' and tanggal_pesanan <= %s and tanggal_pesanan >= %s group by p.nama_produk order by sum(dp.harga * dp.quantity) desc limit 5"
+    query1 = "select p.nama_produk, sum(dp.harga * dp.Jumlah_produk) as jumlah_terjual from produk p join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk join pesanan ps on ps.id_pesanan = dp.pesanan_id_pesanan join pengantar pe on ps.pengantar_id_pengantar = pe.id_pengantar where p.status_produk = 'Aktif' and pe.tanggal_pengantar <= %s and pe.tanggal_pengantar >= %s group by p.nama_produk order by jumlah_terjual desc limit 5"
     try:
         tanggal_awal = dt.date.today()
         tanggal_akhir = tanggal_awal - dt.timedelta(days=7)
@@ -466,7 +486,7 @@ def produk_laris_1minggu(idakun):
 
 def produk_laris_1bulan(idakun):
     kursor, conn = koneksiDB()
-    query1 = "select p.nama_produk, sum(dp.harga * dp.quantity) as jumlah_terjual from produk p join detail_pesanan dp using (id_produk) where p.status_produk = 'Aktif' and tanggal_pesanan <= %s and tanggal_pesanan >= %s group by p.nama_produk order by sum(dp.harga * dp.quantity) desc limit 5"
+    query1 = "select p.nama_produk, sum(dp.harga * dp.Jumlah_produk) as jumlah_terjual from produk p join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk join pesanan ps on ps.id_pesanan = dp.pesanan_id_pesanan join pengantar pe on ps.pengantar_id_pengantar = pe.id_pengantar where p.status_produk = 'Aktif' and pe.tanggal_pengantar <= %s and pe.tanggal_pengantar >= %s group by p.nama_produk order by jumlah_terjual desc limit 5"
     try:
         tanggal_awal = dt.date.today()
         tanggal_akhir = tanggal_awal - dt.timedelta(days=30)
@@ -482,7 +502,7 @@ def produk_laris_1bulan(idakun):
 
 def produk_kurang_1minggu(idakun):
     kursor, conn = koneksiDB()
-    query1 = "select p.nama_produk, sum(dp.harga * dp.quantity) as jumlah_terjual from produk p join detail_pesanan dp using (id_produk) where p.status_produk = 'Aktif' and tanggal_pesanan <= %s and tanggal_pesanan >= %s group by p.nama_produk order by sum(dp.harga * dp.quantity) asc limit 5"
+    query1 = "select p.nama_produk, sum(dp.harga * dp.Jumlah_produk) as jumlah_terjual from produk p join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk join pesanan ps on ps.id_pesanan = dp.pesanan_id_pesanan join pengantar pe on ps.pengantar_id_pengantar = pe.id_pengantar where p.status_produk = 'Aktif' and pe.tanggal_pengantar <= %s and pe.tanggal_pengantar >= %s group by p.nama_produk order by jumlah_terjual asc limit 5"
     try:
         tanggal_awal = dt.date.today()
         tanggal_akhir = tanggal_awal - dt.timedelta(days=7)
@@ -498,7 +518,7 @@ def produk_kurang_1minggu(idakun):
 
 def produk_kurang_1bulan(idakun):
     kursor, conn = koneksiDB()
-    query1 = "select p.nama_produk, sum(dp.harga * dp.quantity) as jumlah_terjual from produk p join detail_pesanan dp using (id_produk) where p.status_produk = 'Aktif' and tanggal_pesanan <= %s and tanggal_pesanan >= %s group by p.nama_produk order by sum(dp.harga * dp.quantity) asc limit 5"
+    query1 = "select p.nama_produk, sum(dp.harga * dp.Jumlah_produk) as jumlah_terjual from produk p join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk join pesanan ps on ps.id_pesanan = dp.pesanan_id_pesanan join pengantar pe on ps.pengantar_id_pengantar = pe.id_pengantar where p.status_produk = 'Aktif' and pe.tanggal_pengantar <= %s and pe.tanggal_pengantar >= %s group by p.nama_produk order by jumlah_terjual asc limit 5"
     try:
         tanggal_awal = dt.date.today()
         tanggal_akhir = tanggal_awal - dt.timedelta(days=30)
@@ -526,30 +546,46 @@ def lihat_produkA(idakun):
     conn.close()
 
 def lihat_pesanan(idakun):
+    kursor, conn = koneksiDB()
     try:
-        kursor, conn = koneksiDB()
-        query = "select * from pesanan"
+        query = """select p.id_pesanan, p.nama_pemesan, p.status_pesanan, k.nama_karyawan, c.email
+        from pesanan p
+        join karyawan k on k.id_karyawan = p.karyawan_id_karyawan
+        join customer c on c.id_customer = p.customer_id_customer
+        join transaksi t on t.id_transaksi = p.transaksi_id_transaksi
+        """
         kursor.execute(query)
         data = kursor.fetchall()
         header= [d[0]for d in kursor.description]
         print (tabulate(data, headers=header, tablefmt='psql'))
     except Exception as e:
         print(f"Terjadi Kesalahan : {e}")
+    kursor.close()
+    conn.close()
 
 def lihat_detail_pesanan(idakun):
+    kursor, conn = koneksiDB()
     try:
-        kursor, conn = koneksiDB()
-        query = "select * from detail_pesanan"
+        query = """select p.nama_produk, p.harga, dp.jumlah_produk, d.diskon, dp.pesanan_id_pesanan as id_pesanan
+        from detail_pesanan dp
+        join produk p on p.id_produk = dp.produk_id_produk
+        left join diskon d on d.id_diskon = dp.diskon_id_diskon
+        """
         kursor.execute(query)
         data = kursor.fetchall()
         header= [d[0]for d in kursor.description]
         print (tabulate(data, headers=header, tablefmt='psql'))
     except Exception as e:
         print(f"Terjadi Kesalahan : {e}")
+    kursor.close()
+    conn.close()
 
 def detail_karyawan(idakun):
     kursor, conn = koneksiDB()
-    query = "select * from karyawan where status_karyawan = 'Aktif' and jabatan_id_jabata <> 'owner'"
+    query = """select k.id_karyawan, k.nama_karyawan, k.tanggal_lahir, k.email, k.no_telp, j.nama_jabatan
+    from karyawan k 
+    join jabatan j on j.id_jabatan = k.jabatan_id_jabatan
+    where k.status_karyawan = 'Aktif' and k.jabatan_id_jabatan <> '5'"""
     while True:
         try:
             kursor.execute(query)
@@ -580,13 +616,19 @@ def detail_karyawan(idakun):
 def lihat_karyawan(idakun):
     try:
         kursor, conn = koneksiDB()
-        query = "select * from karyawan"
+        query = """select k.nama_karyawan, k.tanggal_lahir, k.email, k.no_telp, j.nama_jabatan, k.status_karyawan
+        from karyawan k 
+        join jabatan j on j.id_jabatan = k.jabatan_id_jabatan
+        where k.jabatan_id_jabatan <> '5'
+        order by k.status_karyawan"""
         kursor.execute(query)
         data = kursor.fetchall()
         header= [d[0]for d in kursor.description]
         print (tabulate(data, headers=header, tablefmt='psql'))
     except Exception as e:
         print(f"Terjadi Kesalahan : {e}")
+    kursor.close()
+    conn.close()
 
 def pecat_karyawan(idakun):
     try:
@@ -630,10 +672,14 @@ def tambah_karyawan(idakun):
     kursor, conn = koneksiDB()
     while True:
         nama_karyawan = input('Masukkan Nama Karyawan: ')
+        nama_karyawan = cek_username(nama_karyawan)
         ttl_karyawan = tanggal()
         email_karyawan = input('Masukkan email karyawan: ')
+        email_karyawan = cek_email(email_karyawan)
         no_telp_karyawan = input('Masukkan NO Telp karyawan: ')
+        no_telp_karyawan = cek_no_telp(no_telp_karyawan)
         password_karyawan = input('Masukkan Password karyawan: ')
+        password_karyawan = cek_password(password_karyawan)
         jabatan = questionary.select(
         "Jabatan Karyawan:",
         choices=["Pengantar", "Kasir", "kebersihan", "koki"]
@@ -646,10 +692,6 @@ def tambah_karyawan(idakun):
             jabatan_id = 3
         elif jabatan == "koki":
             jabatan_id = 4
-        nama_karyawan = cek_username(nama_karyawan)
-        password_karyawan = cek_password(password_karyawan)
-        email_karyawan = cek_email(email_karyawan)
-        no_telp_karyawan = cek_no_telp(no_telp_karyawan)
         query1 = "insert into karyawan (nama_karyawan, tanggal_lahir, email, no_telp, akun_id_akun, jabatan_id_jabatan) values (%s, %s, %s, %s, %s, %s);"
         query2 = "insert into akun (username, password, role_id_role) values (%s, %s, 2) returning id_akun;"
         try:
@@ -668,12 +710,12 @@ def tambah_karyawan(idakun):
             conn.close()
 
 def tanggal():
-    tanggal = questionary.text("Tanggal: ").ask()
-    bulan = questionary.text("Bulan: ").ask()
-    tahun = questionary.text("Tahun: ").ask()
     try:
+        tanggal = questionary.text("Tanggal: ").ask()
         tanggal = cek_tanggal(tanggal)
+        bulan = questionary.text("Bulan: ").ask()
         bulan = cek_bulan(bulan)
+        tahun = questionary.text("Tahun: ").ask()
         tahun = cek_tahun(tahun)
         hasil_tanggal = dt.date(tahun, bulan, tanggal)
         return hasil_tanggal
@@ -722,6 +764,9 @@ def hapus_produk(idakun):
         try:
             kursor.execute(query1)
             data = kursor.fetchall()
+            if data is None:
+                print('Tidak Ada Data Yang Bisa Dihapus')
+                break
             header= [d[0]for d in kursor.description]
             print(tabulate(data, headers=header, tablefmt='psql'))
             kursor.execute(query2)
@@ -762,6 +807,9 @@ def kembali_produk(idakun):
         try:
             kursor.execute(query1)
             data = kursor.fetchall()
+            if data is None:
+                print('Tidak Ada Data Yang Bisa Dikembalikan')
+                break
             header= [d[0]for d in kursor.description]
             print(tabulate(data, headers=header, tablefmt='psql'))
             kursor.execute(query2)
@@ -795,16 +843,23 @@ def kembali_produk(idakun):
 
 def tambah_produk(idakun):
     kursor, conn = koneksiDB()
-    nama_produk = input('Masukkan Nama Produk Yang Mau Ditambahkan: ')
-    harga = input('Masukkan Harga Produk: ')
-    query = "insert into produk (nama_produk, harga, stock, status_produk) values (%s, %s, 0, 'Aktif)"
+    query = "insert into produk (nama_produk, harga, stock, status_produk) values (%s, %s, 0, 'Aktif')"
     while True:
         try:
+            nama_produk = input('Masukkan Nama Produk Yang Mau Ditambahkan: ')
             nama_produk = cek_nama_produk(nama_produk)
+            harga = input('Masukkan Harga Produk: ')
             harga = cek_harga(harga)
-            kursor.execute(query)
+            kursor.execute(query, (nama_produk, harga))
             conn.commit()
             print('Penambahan Produk Berhasil')
+            admin_pilih = questionary.select(
+            "Apakah Ada Produk Lagi Yang Mau Ditambah?:",
+            choices=['iya', 'tidak']).ask()
+            if admin_pilih == 'iya':
+                continue
+            elif admin_pilih == 'tidak':
+                break
         except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
         finally:
@@ -1221,18 +1276,29 @@ def diskon(idakun):
             tanggal_awal = tanggal()
             print(f"Masukkan Tanggal Akhir Diskon")
             tanggal_akhir = tanggal()
-            if tanggal_akhir < tanggal_awal:
-                kode_voucer = input("Buat Kode Voucher Baru: ")
-                kode_voucer = cek_nama(kode_voucer)
+            if tanggal_akhir >= tanggal_awal:
+                while True:
+                    kode_voucer = input("Buat Kode Voucher Baru: ")
+                    if not kode_voucer.strip():
+                        print("kode voucher tidak boleh kosong atau spasi saja")
+                        continue
+                    break
+                diskon_produk = input("Masukkan Diskon Baru: ")
                 while True:
                     try:
-                        diskon_produk = int(input("Masukkan Diskon Baru: "))
                         if not diskon_produk.strip():
                             print("Diskon Tidak Boleh Kosong dan Spasi Saja")
+                            diskon_produk = input("Masukkan Diskon Baru: ")
+                            continue
+                        diskon_produk = int(diskon_produk)
+                        if diskon_produk > 100:
+                            print('diskon terlalu banyak')
+                            diskon_produk = input("Masukkan Diskon Baru: ")
                             continue
                         break
                     except:
                         print(f"Diskon Yang Dimasukkan Harus Berupa Angka")
+                        diskon_produk = input("Masukkan Diskon Baru: ")
                         continue
             else:
                 print("Tanggal Akhir Tidak Boleh Kurang Dari Tanggal Dimulai Diskon")
