@@ -155,10 +155,14 @@ def cek_username(username):
     while True:
         try:
             if any(s in username for s in simbol):
-                print('Username Tidak Sesuai Harus Terdiri Dari Huruf dan Angka')
+                print('Username Tidak Sesuai Harus Terdiri Dari Huruf')
                 username = input('Masukkan Username: ')
                 continue
-            if len(username) < 2:
+            if username.isdigit():
+                print("username tidak boleh pakai angka")
+                username = input('Masukkan Username: ')
+                continue
+            if len(username) < 3:
                 print("Username minimal 3 karakter")
                 username = input("Masukkan Username: ")
                 continue
@@ -170,11 +174,13 @@ def cek_username(username):
             kursor.execute(query, (username,))
             cocok = kursor.fetchone()
             if cocok is not None:
-                print('Username Tidak Sesuai')
+                print('Username Sudah Dipakai')
                 username = input('Masukkan Username: ')
                 continue
         except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
+            username = input("Masukkan Username: ")
+            continue
         break
     kursor.close()
     conn.close()
@@ -240,10 +246,11 @@ def cek_password(password):
         break
     return password
 
-def cek_email(email):
+def cek_email_customer(email):
+    kursor, conn = koneksiDB()
     while True:
         try:
-            if email.endwith('@gmail.com') == False:
+            if not email.endswith('@gmail.com'):
                 print('Email harus mengunakan @gmail.com')
                 email = input('Masukkan Email Anda: ')
                 continue
@@ -251,29 +258,110 @@ def cek_email(email):
                 print("Email tidak boleh kosong atau spasi saja!")
                 email = input("Masukkan Email Anda: ")
                 continue
+            query = "select * from customer where email = %s"
+            kursor.execute(query, (email,))
+            cocok = kursor.fetchone()
+            if cocok is not None:
+                print('Email Sudah Dipakai')
+                email = input('Masukkan Email: ')
+                continue
             break
         except Exception as e:
             print(f"Terjadi kesalahan: {e}")
+            email = input("Masukkan Email Anda: ")
+            continue
+    kursor.close()
+    conn.close()
     return email
 
-def cek_no_telp(no_telp):
+def cek_email_karyawan(email):
+    kursor, conn = koneksiDB()
     while True:
         try:
-            if no_telp.isalpha() == False:
-                print('Nomer Telp harus angka semua')
-                no_telp = input('Masukkan NO Telp Anda: ')
+            if not email.endswith('@gmail.com'):
+                print('Email harus mengunakan @gmail.com')
+                email = input('Masukkan Email Anda: ')
                 continue
+            if not email.strip():
+                print("Email tidak boleh kosong atau spasi saja!")
+                email = input("Masukkan Email Anda: ")
+                continue
+            query = "select * from karyawan where email = %s"
+            kursor.execute(query, (email,))
+            cocok = kursor.fetchone()
+            if cocok is not None:
+                print('Email Sudah Dipakai')
+                email = input('Masukkan Email: ')
+                continue
+            break
+        except Exception as e:
+            print(f"Terjadi kesalahan: {e}")
+            email = input("Masukkan Email Anda: ")
+            continue
+    kursor.close()
+    conn.close()
+    return email
+
+def cek_no_telp_customer(no_telp):
+    kursor, conn = koneksiDB()
+    while True:
+        try:
             if not no_telp.strip():
                 print("Nomer Telp tidak boleh kosong atau spasi saja!")
                 no_telp = input("Masukkan NO Telp Anda: ")
+                continue
+            if not no_telp.isdigit():
+                print('Nomer Telp harus angka semua')
+                no_telp = input('Masukkan NO Telp Anda: ')
                 continue
             if not (len(no_telp) >= 10 and len(no_telp) <= 13):
                 print('Nomer Telp harus 10-13 digit')
                 no_telp = input('Masukkan NO Telp Anda: ')
                 continue
+            query = "select * from customer where no_telp = %s"
+            kursor.execute(query, (no_telp,))
+            cocok = kursor.fetchone()
+            if cocok is not None:
+                print('NO TELP Sudah Dipakai')
+                no_telp = input('Masukkan NO TELP Anda: ')
+                continue
             break
         except Exception as e:
             print(f"Terjadi kesalahan: {e}")
+            continue
+    kursor.close()
+    conn.close()
+    return no_telp
+
+def cek_no_telp_karyawan(no_telp):
+    kursor, conn = koneksiDB()
+    while True:
+        try:
+            if not no_telp.strip():
+                print("Nomer Telp tidak boleh kosong atau spasi saja!")
+                no_telp = input("Masukkan NO Telp Anda: ")
+                continue
+            if not no_telp.isdigit():
+                print('Nomer Telp harus angka semua')
+                no_telp = input('Masukkan NO Telp Anda: ')
+                continue
+            if not (len(no_telp) >= 10 and len(no_telp) <= 13):
+                print('Nomer Telp harus 10-13 digit')
+                no_telp = input('Masukkan NO Telp Anda: ')
+                continue
+            query = "select * from karyawan where no_telp = %s"
+            kursor.execute(query, (no_telp,))
+            cocok = kursor.fetchone()
+            if cocok is not None:
+                print('NO TELP Sudah Dipakai')
+                no_telp = input('Masukkan NO TELP Anda: ')
+                continue
+            break
+        except Exception as e:
+            print(f"Terjadi kesalahan: {e}")
+            continue
+    kursor.close()
+    conn.close()
     return no_telp
 
 def cek_tanggal(tanggal):
@@ -332,12 +420,6 @@ def cek_tahun(tahun):
                 print("tahun terlalu panjang")
                 tahun = questionary.text("Tahun: ").ask()
                 continue
-            tanggal_sekarang = dt.date.today()
-            tahun_saja = tanggal_sekarang.year
-            if tahun < tahun_saja:
-                print('Tahun Yang Anda Masukkan Salah')
-                tahun = questionary.text("Tahun: ").ask()
-                continue
             break
         except Exception as e:
             print(f"Terjadi kesalahan: {e}")
@@ -371,13 +453,13 @@ def buat_akun_customer():
     kursor, conn = koneksiDB()
     while True:
         username_customer = input('Masukkan Username Anda: ')
-        password_customer = input('Masukkan Password Anda: ')
-        gmail_customer = input('Masukkan Email Anda: ')
-        no_telp_customer = input('Masukkan NO_Telp Anda: ')
         username_customer = cek_username(username_customer)
+        password_customer = input('Masukkan Password Anda: ')
         password_customer = cek_password(password_customer)
-        gmail_customer = cek_email(gmail_customer)
-        no_telp_customer = cek_no_telp(no_telp_customer)
+        gmail_customer = input('Masukkan Email Anda: ')
+        gmail_customer = cek_email_customer(gmail_customer)
+        no_telp_customer = input('Masukkan NO_Telp Anda: ')
+        no_telp_customer = cek_no_telp_customer(no_telp_customer)
         query1 = "insert into customer (no_telp, email, akun_id_akun) values (%s, %s, %s);"
         query2 = "insert into akun (username, password, role_id_role) values (%s, %s, 3) returning id_akun;"
         # query3 = "select id_akun from akun where username = %s and password = %s"
@@ -612,6 +694,8 @@ def detail_karyawan(idakun):
                 print('Pilihan Tidak Ada')
         except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
+    kursor.close()
+    conn.close()
 
 def lihat_karyawan(idakun):
     try:
@@ -633,8 +717,11 @@ def lihat_karyawan(idakun):
 def pecat_karyawan(idakun):
     try:
         kursor, conn = koneksiDB()
-        query1 = "select * from karyawan where status_karyawan = 'Aktif' and jabatan_id_jabata <> 5"
-        query2 = "select id_karyawan from karyawan where status_karyawan = 'Aktif' and jabatan_id_jabata <> 5"
+        query1 = """select k.id_karyawan, k.nama_karyawan, k.tanggal_lahir, k.email, k.no_telp, j.nama_jabatan
+        from karyawan k 
+        join jabatan j on j.id_jabatan = k.jabatan_id_jabatan
+        where k.status_karyawan = 'Aktif' and k.jabatan_id_jabatan <> '5'"""
+        query2 = "select id_karyawan from karyawan where status_karyawan = 'Aktif' and jabatan_id_jabatan <> 5"
         query3 = "update karyawan set status_karyawan = 'Tidak Aktif' where id_karyawan = %s"
         while True:
             kursor.execute(query1)
@@ -645,8 +732,6 @@ def pecat_karyawan(idakun):
             data = kursor.fetchall()
             data_list = [i[0] for i in data]
             print('======Id Karyawan======')
-            for i in data:
-                print(f'id karyawan {i[0]}')
             try:
                 admin_input = int(input('Pilih Id Karyawan yang mau dipecat: '))
                 while True:
@@ -673,11 +758,12 @@ def tambah_karyawan(idakun):
     while True:
         nama_karyawan = input('Masukkan Nama Karyawan: ')
         nama_karyawan = cek_username(nama_karyawan)
+        print('Masukkan Tanggal Lahir Karyawan')
         ttl_karyawan = tanggal()
         email_karyawan = input('Masukkan email karyawan: ')
-        email_karyawan = cek_email(email_karyawan)
+        email_karyawan = cek_email_karyawan(email_karyawan)
         no_telp_karyawan = input('Masukkan NO Telp karyawan: ')
-        no_telp_karyawan = cek_no_telp(no_telp_karyawan)
+        no_telp_karyawan = cek_no_telp_karyawan(no_telp_karyawan)
         password_karyawan = input('Masukkan Password karyawan: ')
         password_karyawan = cek_password(password_karyawan)
         jabatan = questionary.select(
@@ -692,13 +778,13 @@ def tambah_karyawan(idakun):
             jabatan_id = 3
         elif jabatan == "koki":
             jabatan_id = 4
-        query1 = "insert into karyawan (nama_karyawan, tanggal_lahir, email, no_telp, akun_id_akun, jabatan_id_jabatan) values (%s, %s, %s, %s, %s, %s);"
+        query1 = "insert into karyawan (nama_karyawan, tanggal_lahir, email, no_telp, jabatan_id_jabatan, akun_id_akun, status_karyawan) values (%s, %s, %s, %s, %s, %s, 'Aktif');"
         query2 = "insert into akun (username, password, role_id_role) values (%s, %s, 2) returning id_akun;"
         try:
             kursor.execute(query2, (nama_karyawan, password_karyawan))
             cocokan = kursor.fetchone()
             id_akun = cocokan[0]
-            kursor.execute(query1, (nama_karyawan, ttl_karyawan, email_karyawan, no_telp_karyawan, id_akun, jabatan_id))
+            kursor.execute(query1, (nama_karyawan, ttl_karyawan, email_karyawan, no_telp_karyawan, jabatan_id, id_akun))
             conn.commit()
             print('BUAT AKUN BERHASIL')
             break
