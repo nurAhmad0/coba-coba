@@ -623,7 +623,7 @@ def tambah_karyawan(idakun):
     kursor, conn = koneksiDB()
     while True:
         nama_karyawan = input('Masukkan Nama Karyawan: ')
-        ttl_karyawan = tanggal_karyawan()
+        ttl_karyawan = tanggal()
         email_karyawan = input('Masukkan email karyawan: ')
         no_telp_karyawan = input('Masukkan NO Telp karyawan: ')
         password_karyawan = input('Masukkan Password karyawan: ')
@@ -643,7 +643,6 @@ def tambah_karyawan(idakun):
         password_karyawan = cek_password(password_karyawan)
         email_karyawan = cek_email(email_karyawan)
         no_telp_karyawan = cek_no_telp(no_telp_karyawan)
-        ttl_karyawan = cek_tanggal(ttl_karyawan)
         query1 = "insert into karyawan (nama_karyawan, tanggal_lahir, email, no_telp, akun_id_akun, jabatan_id_jabatan) values (%s, %s, %s, %s, %s, %s);"
         query2 = "insert into akun (username, password, role_id_role) values (%s, %s, 2) returning id_akun;"
         try:
@@ -661,7 +660,7 @@ def tambah_karyawan(idakun):
             kursor.close()
             conn.close()
 
-def tanggal_karyawan(idakun):
+def tanggal():
     tanggal = questionary.text("Tanggal: ").ask()
     bulan = questionary.text("Bulan: ").ask()
     tahun = questionary.text("Tahun: ").ask()
@@ -669,8 +668,8 @@ def tanggal_karyawan(idakun):
         tanggal = cek_tanggal(tanggal)
         bulan = cek_bulan(bulan)
         tahun = cek_tahun(tahun)
-        karyawan_date = dt.date(tahun, bulan, tanggal)
-        return karyawan_date
+        hasil_tanggal = dt.date(tahun, bulan, tanggal)
+        return hasil_tanggal
     except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
 
@@ -1102,15 +1101,19 @@ def identitas_customer():
             break
         elif detail_customer == "Salah":
             continue
-    return nama_pemesan, alamat_pesanan, id_area_pesanan, metode_pembayaran, Status_Transaksi
+    return nama_pemesan, alamat_pesanan, id_area_pesanan, metode_pembayaran, Status_Transaksi, area_pesanan
             
-def struk_pesanan(nama_pemesan, alamat_pesanan, area_pesanan, metode_pembayaran, produk_dipesan, jumlah, harga_pesanan):
+def struk_pesanan(nama_pemesan, alamat_pesanan, metode_pembayaran, produk_dipesan, jumlah, harga_pesanan, area_pesanan):
     kursor, conn = koneksiDB()
     query = "select harga from produk where nama_produk = %s"
+    query2 = "select harga_antar from Area where Nama_Area = %s"
     try:
         print(f"Nama Pemesan adalah {nama_pemesan}")
         banyak = len(produk_dipesan)
         simpan_pesanan = []
+        kursor.execute(query2, (area_pesanan, ))
+        harga_antar = kursor.fetchone()
+        harga_antar = harga_antar[0]
         harga_pesanan = 0
         for i in range(banyak):
             kursor.execute(query, (produk_dipesan[i],))
@@ -1119,8 +1122,9 @@ def struk_pesanan(nama_pemesan, alamat_pesanan, area_pesanan, metode_pembayaran,
             pesanan = [produk_dipesan[i], jumlah[i], harga_produk]
             simpan_pesanan.append(pesanan)
             harga_pesanan = harga_pesanan + (harga_produk * jumlah[i])
+        Total_harga = harga_pesanan + harga_antar
         print(tabulate(simpan_pesanan, headers =["Produk","jumlah", "Harga Produk"]))
-        print(f'Total Harga Pesanan = {harga_pesanan}')
+        print(f'Total Harga Pesanan = {Total_harga}')
         print(f"Alamat Pesanan Berada Di {alamat_pesanan} dan Berada di area {area_pesanan}")
         print(f"Metode Pembayaran Menggunakan {metode_pembayaran}")
     except Exception as e:
@@ -1132,6 +1136,7 @@ def transaksi_pesanan(idakun, produk_dipesan, jumlah, sisa_stock, id_produk):
     kursor, conn = koneksiDB()
     query = "select harga from produk where nama_produk = %s"
     try:
+        diskon_produk = diskon_customer()
         banyak = len(produk_dipesan)
         simpan_pesanan = []
         harga = []
@@ -1143,18 +1148,18 @@ def transaksi_pesanan(idakun, produk_dipesan, jumlah, sisa_stock, id_produk):
             harga.append(harga_produk)
             pesanan = [produk_dipesan[i], jumlah[i], harga_produk]
             simpan_pesanan.append(pesanan)
-            harga_pesanan = harga_pesanan + (harga_produk * jumlah[i])
+            harga_pesanan = harga_pesanan + (harga_produk * jumlah[i]) 
         print(tabulate(simpan_pesanan, headers =["Produk","jumlah", "Harga"]))
         print(f'Total Harga Pesanan = {harga_pesanan}')
         customer_pilih = questionary.select(
-            "Apakah sudaah benar Pesanan anda:",
+            "Apakah sudah benar Pesanan anda:",
             choices=["iya,Sudah Benar", "Tidak"]
             ).ask()
         if customer_pilih == "iya,Sudah Benar":
-            nama_pemesan, alamat_pesanan, area_pesanan, metode_pembayaran, Status_Transaksi = identitas_customer()
-            struk_pesanan(nama_pemesan, alamat_pesanan, area_pesanan, metode_pembayaran, produk_dipesan, jumlah, harga_pesanan)
+            nama_pemesan, alamat_pesanan, id_area_pesanan, metode_pembayaran, Status_Transaksi, area_pesanan = identitas_customer()
+            struk_pesanan(nama_pemesan, alamat_pesanan, metode_pembayaran, produk_dipesan, jumlah, harga_pesanan, area_pesanan)
             tanggal = dt.date.today()
-            simpan_data(idakun, jumlah, sisa_stock, nama_pemesan, alamat_pesanan, area_pesanan, metode_pembayaran, id_produk, tanggal, Status_Transaksi, harga)
+            simpan_data(idakun, jumlah, sisa_stock, nama_pemesan, alamat_pesanan, id_area_pesanan, metode_pembayaran, id_produk, tanggal, Status_Transaksi, harga)
         elif customer_pilih == "Tidak":
             pesanan_customer(idakun)
     except Exception as e:
@@ -1166,7 +1171,7 @@ def simpan_data(idakun, jumlah, sisa_stock, nama_pemesan, alamat_pesanan, id_are
     kursor, conn = koneksiDB()
     query1 = "insert into Transaksi (Status_Transaksi, tanggal_Transaksi, Metode_Pembayaran) values (%s, %s, %s) returning ID_Transaksi;"
     query2 = "insert into Alamat_Pesanan (Jalan_Pesanan, Area_ID_Area) values (%s, %s) returning ID_Alamat_Pesanan;"
-    query3 = "insert into Pesanan (Nama_Pemesan, Status_Pesanan, customer_ID_Customer, Alamat_Pesanan_ID_Alamat_Pesanan, Transaksi_ID_Transaksi, Karyawan_ID_Karyawan) values (%s, %s, %s, %s, %s, %s) returning ID_Pesanan;"
+    query3 = "insert into Pesanan (Nama_Pemesan, Status_Pesanan, Karyawan_ID_Karyawan, customer_ID_Customer, Alamat_Pesanan_ID_Alamat_Pesanan, Pengantar_ID_Pengantar, Transaksi_ID_Transaksi) values (%s, %s, %s, %s, %s, %s, %s) returning ID_Pesanan;"
     query4 = "insert into Detail_Pesanan (Harga, Jumlah_Produk, Produk_ID_Produk, Pesanan_ID_Pesanan) values (%s, %s, %s, %s)"
     query5 = "update produk set Stock = %s where id_produk = %s"
     try: 
@@ -1179,7 +1184,7 @@ def simpan_data(idakun, jumlah, sisa_stock, nama_pemesan, alamat_pesanan, id_are
             if id_alamat is not None:
                 id_alamat = id_alamat[0]
                 status_pesanan_customer = "Menunggu"
-                kursor.execute(query3, (nama_pemesan, status_pesanan_customer, idakun, id_alamat, id_transaksi, None))
+                kursor.execute(query3, (nama_pemesan, status_pesanan_customer, None, idakun, id_alamat, None, id_transaksi))
                 id_pesanan = kursor.fetchone()
                 if id_pesanan is not None:
                     id_pesanan = id_pesanan[0]
@@ -1193,7 +1198,43 @@ def simpan_data(idakun, jumlah, sisa_stock, nama_pemesan, alamat_pesanan, id_are
     kursor.close()
     conn.close()
 
+def diskon(idakun):
+    kursor, conn = koneksiDB()
+    query1 = "insert into Diskon (Tanggal_Awal, Tanggal_Akhir, Kode_voucher, diskon) values (%s, %s, %s, %s)"
+    while True:
+        try:
+            print(f"Masukkan Tanggal Dimulai Diskon")
+            tanggal_awal = tanggal()
+            print(f"Masukkan Tanggal Akhir Diskon")
+            tanggal_akhir = tanggal()
+            if tanggal_akhir < tanggal_awal:
+                kode_voucer = input("Buat Kode Voucher Baru: ")
+                kode_voucer = cek_nama(kode_voucer)
+                while True:
+                    try:
+                        diskon_produk = int(input("Masukkan Diskon Baru: "))
+                        if not diskon_produk.strip():
+                            print("Diskon Tidak Boleh Kosong dan Spasi Saja")
+                            continue
+                        break
+                    except:
+                        print(f"Diskon Yang Dimasukkan Harus Berupa Angka")
+                        continue
+            else:
+                print("Tanggal Akhir Tidak Boleh Kurang Dari Tanggal Dimulai Diskon")
+                continue
+            kursor.execute(query1, (tanggal_awal, tanggal_akhir, kode_voucer, diskon_produk))
+            conn.commit()
+            print("Penambahan Diskon Berhasil")
+            break
+        except Exception as e:
+            print(f"Terjadi Kesalahan : {e}")
+    kursor.close()
+    conn.close()
 
+def diskon_customer():
+    csutomer_diskon =
+    
 
 
 
@@ -1208,32 +1249,32 @@ def simpan_data(idakun, jumlah, sisa_stock, nama_pemesan, alamat_pesanan, id_are
 
 
 
-kursor.execute(query1)
-data = kursor.fetchall()
-header= [d[0]for d in kursor.description]
-            print (tabulate(data, headers=header, tablefmt='psql'))
-            kursor.execute(query2)
-            data = kursor.fetchall()
-            data_list = [i[0] for i in data]
-            print('======Id Karyawan======')
-            for i in data:
-                print(f'id karyawan {i[0]}')
-            while True:
-                try:
-                    admin_input = int(input('Pilih Id Produk yang mau dihilangkan: '))
-                    while True:
-                        if admin_input not in data_list:
-                            print('Id Karyawan yang anda masukkan salah')
-                            admin_input = int(input('Pilih Id Produk yang mau dihilangkan: '))
-                            continue
-                        break
-                except ValueError:
-                    print("Input harus berupa angka!")
-                    continue
-                break
-            kursor.execute(query3, (admin_input,))
-            conn.commit()
-            print('Pemecatan Berhasil')
+# kursor.execute(query1)
+# data = kursor.fetchall()
+# header= [d[0]for d in kursor.description]
+#             print (tabulate(data, headers=header, tablefmt='psql'))
+#             kursor.execute(query2)
+#             data = kursor.fetchall()
+#             data_list = [i[0] for i in data]
+#             print('======Id Karyawan======')
+#             for i in data:
+#                 print(f'id karyawan {i[0]}')
+#             while True:
+#                 try:
+#                     admin_input = int(input('Pilih Id Produk yang mau dihilangkan: '))
+#                     while True:
+#                         if admin_input not in data_list:
+#                             print('Id Karyawan yang anda masukkan salah')
+#                             admin_input = int(input('Pilih Id Produk yang mau dihilangkan: '))
+#                             continue
+#                         break
+#                 except ValueError:
+#                     print("Input harus berupa angka!")
+#                     continue
+#                 break
+#             kursor.execute(query3, (admin_input,))
+#             conn.commit()
+#             print('Pemecatan Berhasil')
 
 
 
@@ -1275,17 +1316,17 @@ header= [d[0]for d in kursor.description]
 
 
 
-# print('berhasil')
-# cursor = conn.cursor()
-# query = "SELECT * FROM public.karyawan;"
-# cursor.execute(query)
-# data = cursor.fetchall()
-# for row in data:
-#     print(row)
+# # print('berhasil')
+# # cursor = conn.cursor()
+# # query = "SELECT * FROM public.karyawan;"
+# # cursor.execute(query)
+# # data = cursor.fetchall()
+# # for row in data:
+# #     print(row)
 
-# cursor.close()
-# conn.close()
-# query = "SELECT * FROM public.karyawan;"
-# df = pd.read_sql(query, conn)
-# conn.close()
-# print(df.head())
+# # cursor.close()
+# # conn.close()
+# # query = "SELECT * FROM public.karyawan;"
+# # df = pd.read_sql(query, conn)
+# # conn.close()
+# # print(df.head())
