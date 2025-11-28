@@ -1223,6 +1223,14 @@ def lihat_pesanan_customer(idakun):
                     print("Input harus berupa angka!")
                     continue
             lihat_satu_pesanan(idakun, customer_input)
+            pilih_menu = questionary.select(
+            "Mau Lihat Pesanan Lagi?:",
+            choices=["Iya", "Tidak"]
+            ).ask()
+            if pilih_menu == "Iya":
+                continue
+            elif pilih_menu == "Tidak":
+                break
         except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
     kursor.close()
