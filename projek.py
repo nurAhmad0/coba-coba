@@ -969,11 +969,13 @@ def hapus_produk(idakun):
             print(f'MENU ADMIN >> PERBARUI PRODUK >> HAPUS PRODUK'.center(86))
             batas()
             kursor.execute(query1)
-            data = kursor.fetchall()
+            data = kursor.fetchone()
             if data is None:
                 print('Tidak Ada Data Yang Bisa Dihapus')
                 enter()
                 break
+            kursor.execute(query1)
+            data = kursor.fetchall()
             header= [d[0]for d in kursor.description]
             print(tabulate(data, headers=header, tablefmt='psql'))
             kursor.execute(query2)
@@ -1019,9 +1021,10 @@ def kembali_produk(idakun):
             print(f'MENU ADMIN >> PERBARUI PRODUK >> KEMBALIKAN PRODUK'.center(86))
             batas()
             kursor.execute(query1)
-            data = kursor.fetchall()
+            data = kursor.fetchone()
             if data is None:
                 print('Tidak Ada Data Yang Bisa Dikembalikan')
+                enter()
                 break
             header= [d[0]for d in kursor.description]
             print(tabulate(data, headers=header, tablefmt='psql'))
@@ -1881,7 +1884,7 @@ def konfirmasi_pesanan(idkaryawan):
 
 def menu_karyawan(idkaryawan):
     kursor, conn = koneksiDB()
-    query = "select k.jabatan_id_jabatan from karyawan k join akun a on a.id_akun = k.akun_id akun where id_akun = %s"
+    query = "select k.jabatan_id_jabatan from karyawan k join akun a on a.id_akun = k.akun_id_akun where id_akun = %s"
     while True:
         try:
             kursor.execute(query, (idkaryawan,))
@@ -1895,12 +1898,10 @@ def menu_karyawan(idkaryawan):
             pilihan_karyawan = input ("Masukan pilihan:")
             if pilihan_karyawan == "1":
                 lihat_produk_karyawan(idkaryawan)
-                enter()
                 continue
             elif pilihan_karyawan == "2":
                 if id_jabatan == 2:
                     update_stock(idkaryawan)
-                    enter()
                     continue
                 else:
                     print('Anda Tidak memiliki Akses')
@@ -1908,7 +1909,6 @@ def menu_karyawan(idkaryawan):
             elif pilihan_karyawan == "3":  
                 if id_jabatan == 2:
                     kelola_pesanan_cust(idkaryawan)
-                    enter()
                     continue
                 else:
                     print('Anda Tidak memiliki Akses')
@@ -1916,7 +1916,6 @@ def menu_karyawan(idkaryawan):
             elif pilihan_karyawan == "4":  
                 if id_jabatan == 1:
                     konfirmasi_pesanan(idkaryawan)
-                    enter()
                     continue
                 else:
                     print('Anda Tidak memiliki Akses')
