@@ -66,6 +66,7 @@ def login():
                 break
         except:
             print('Pilihan Login Yang Anda Masukkan Salah\nSilahkan Masukkan Pilihan Login lagi ')
+            enter()
 
 #------------------------------------------------------------------------------------------------------
 def pilihan_login_cust():
@@ -127,7 +128,6 @@ def logincustomer():
 
     kursor.close()
     conn.close()
-
             
 def loginadmin():
     kursor, conn = koneksiDB()
@@ -1616,9 +1616,14 @@ def diskon_customer():
                         diskon_produk = kursor.fetchone()
                         harga_diskon = diskon_produk[0]
                         break
+                    else:
+                        print("kode voucher sudah kadaluarsa")
+                        enter()
+                        continue
                 else:
                     print("kode voucher tidak ada")
                     harga_diskon = 0
+                    enter()
                     continue
         except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
