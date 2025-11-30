@@ -50,20 +50,25 @@ def login():
         logo()
         print(f'======LOGIN AKUN SEBAGAI======'.center(86))
         batas()
-        print('(1). Login Sebagai Admin\n(2). Login Sebagai Customer\n(3). Login Sebagai Karyawan\n(4). Exit'.center(86))
-        akunpengguna = input('Pilih Login Sebagai >> ')
+        akunpengguna = questionary.select(
+        "Pilih Login Akun sebagai Apa?:",
+        choices=["Login Sebagai Admin", "Login Sebagai Customer", "Login Sebagai Karyawan", "Exit"]
+        ).ask()
         try:
-            if akunpengguna == '1':
+            if akunpengguna == 'Login Sebagai Admin':
                 loginadmin()
                 continue
-            elif akunpengguna == '2':
+            elif akunpengguna == 'Login Sebagai Customer':
                 pilihan_login_cust()
                 continue
-            elif akunpengguna == '3':
+            elif akunpengguna == 'Login Sebagai Karyawan':
                 loginkaryawan()
                 continue
-            elif akunpengguna == '4':
+            elif akunpengguna == 'Exit':
                 break
+            else:
+                print('Pilihan Login Yang Anda Masukkan Salah\nSilahkan Masukkan Pilihan Login lagi ')
+            enter()
         except:
             print('Pilihan Login Yang Anda Masukkan Salah\nSilahkan Masukkan Pilihan Login lagi ')
             enter()
@@ -75,20 +80,19 @@ def pilihan_login_cust():
         logo()
         print('======LOGIN AKUN CUSTOMER======'.center(86))
         batas()
-        print('(1). Sudah Punya Akun\n(2). Belum Punya Akun\n(3). Exit')
-        akun_customer = input('Masukkan Pilihan Akun: ')
+        akun_customer = questionary.select(
+        "Pilihan Login Akun Customer:",
+        choices=["Sudah Punya Akun", "Belum Punya Akun", "Exit"]
+        ).ask()
         try:
-            if akun_customer == '1':
+            if akun_customer == 'Sudah Punya Akun':
                 logincustomer()
                 continue
-            elif akun_customer == '2':
+            elif akun_customer == 'Belum Punya Akun':
                 buat_akun_customer()
                 continue
-            elif akun_customer == "3":
+            elif akun_customer == "Exit":
                 break
-            else:
-                print('Pilihan Tidak Ada')
-                enter()
         except:
             print('Inputan Yang Dimasukkan Tidak Valid')
             enter()
@@ -186,7 +190,7 @@ def cek_nama(nama):
                 print('nama Tidak Sesuai Harus Terdiri Dari Huruf dan Angka')
                 nama = input('Masukkan Pesanan Atas Nama >> ')
                 continue
-            if nama.isdigit():
+            if not nama.isalpha():
                 print("nama tidak boleh pakai angka")
                 nama = input('Masukkan Pesanan Atas Nama >> ')
                 continue
@@ -214,7 +218,7 @@ def cek_username(username):
                 username = input('Masukkan Username: ')
                 continue
             if username.isdigit():
-                print("username tidak boleh pakai angka")
+                print("username tidak boleh pakai angka semua")
                 username = input('Masukkan Username: ')
                 continue
             if len(username) < 3:
@@ -545,33 +549,33 @@ def menu_admin(idakun):
         logo()
         print('MENU ADMIN'.center(64))
         batas()
-        print("(1). Melihat Produk\n(2). Memperbarui Produk\n(3). Laporan\n(4). Melihat pesanan\n(5). Melihat Detail Pesanan\n(6). Detail Karyawan\n(7). Diskon\n(8). Exit")
-        input_admin = input('Pilih Menu Yang Diinginkan >> ')
-        if input_admin == '1':
+        input_admin = questionary.select(
+        "Masukkan Pilihan Menu Admin:",
+        choices=['Melihat Produk','Memperbarui Produk','Laporan','Melihat pesanan','Melihat Detail Pesanan','Detail Karyawan','Diskon','Exit']
+        ).ask()
+        if input_admin == 'Melihat Produk':
             lihat_produkA(idakun)
             continue
-        elif input_admin == '2':
+        elif input_admin == 'Memperbarui Produk':
             perbarui_produk(idakun)
             continue
-        elif input_admin == '3':
+        elif input_admin == 'Laporan':
             laporan(idakun)
             continue
-        elif input_admin == '4':
+        elif input_admin == 'Melihat pesanan':
             lihat_pesanan(idakun)
             continue
-        elif input_admin == '5':
+        elif input_admin == 'Melihat Detail Pesanan':
             lihat_detail_pesanan(idakun)
             continue
-        elif input_admin == '6':
+        elif input_admin == 'Detail Karyawan':
             detail_karyawan(idakun)
             continue
-        elif input_admin == '7':
+        elif input_admin == 'Diskon':
             diskon(idakun)
             continue
-        elif input_admin == '8':
+        elif input_admin == 'Exit':
             break
-        else:
-            print("Pilihan Tidak Ada")
 
 def laporan(idakun):
     kursor, conn = koneksiDB()
@@ -586,22 +590,23 @@ def laporan(idakun):
             data = kursor.fetchall()
             header= [d[0]for d in kursor.description]
             print (tabulate(data, headers=header, tablefmt='psql'))
-            print("=====MENU LAPORAN=====")
-            print("(1). Tampilkan 5 Produk Terlaris 1 Minggu Terkhir\n(2). Tampilkan 5 Produk Terlaris 1 Bulan Terakhir\n(3). Tampilkan 5 Produk Kurang Diminati 1 Minggu Terakhir\n(4). Tampilkan 5 Produk Kurang Diminati 1 Bulan Terakhir\n(5). Exit")
-            admin_pilih = input('Masukkan Pilihan Anda >> ')
-            if admin_pilih == '1':
+            admin_pilih = questionary.select(
+            "Masukkan Pilihan Menu Laporan:",
+            choices=["Tampilkan 5 Produk Terlaris 1 Minggu Terkhir", "Tampilkan 5 Produk Terlaris 1 Bulan Terakhir", "Tampilkan 5 Produk Kurang Diminati 1 Minggu Terakhir", "Tampilkan 5 Produk Kurang Diminati 1 Bulan Terakhir", "Exit"]
+            ).ask()
+            if admin_pilih == 'Tampilkan 5 Produk Terlaris 1 Minggu Terkhir':
                 produk_laris_1minggu(idakun)
                 continue
-            elif admin_pilih == '2':
+            elif admin_pilih == 'Tampilkan 5 Produk Terlaris 1 Bulan Terakhir':
                 produk_laris_1bulan(idakun)
                 continue
-            elif admin_pilih == '3':
+            elif admin_pilih == 'Tampilkan 5 Produk Kurang Diminati 1 Minggu Terakhir':
                 produk_kurang_1minggu(idakun)
                 continue
-            elif admin_pilih == '4':
+            elif admin_pilih == 'Tampilkan 5 Produk Kurang Diminati 1 Bulan Terakhir':
                 produk_kurang_1bulan(idakun)
                 continue
-            elif admin_pilih == '5':
+            elif admin_pilih == 'Exit':
                 break
             else:
                 print('Pilihan Tidak Ada')
@@ -614,7 +619,7 @@ def laporan(idakun):
 
 def produk_laris_1minggu(idakun):
     kursor, conn = koneksiDB()
-    query1 = "select p.nama_produk, sum(dp.harga * dp.Jumlah_produk) as jumlah_terjual from produk p join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk join pesanan ps on ps.id_pesanan = dp.pesanan_id_pesanan join pengantar pe on ps.pengantar_id_pengantar = pe.id_pengantar where p.status_produk = 'Aktif' and pe.tanggal_pengantar <= %s and pe.tanggal_pengantar >= %s group by p.nama_produk order by jumlah_terjual desc limit 5"
+    query1 = "select p.nama_produk, sum(dp.jumlah_produk) as jumlah_terjual, sum(dp.harga * dp.Jumlah_produk) as jumlah_penghasilan from produk p join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk join pesanan ps on ps.id_pesanan = dp.pesanan_id_pesanan join pengantar pe on ps.pengantar_id_pengantar = pe.id_pengantar where p.status_produk = 'Aktif' and pe.tanggal_pengantar <= %s and pe.tanggal_pengantar >= %s group by p.nama_produk order by jumlah_terjual desc limit 5"
     try:
         clear()
         logo()
@@ -635,7 +640,7 @@ def produk_laris_1minggu(idakun):
 
 def produk_laris_1bulan(idakun):
     kursor, conn = koneksiDB()
-    query1 = "select p.nama_produk, sum(dp.harga * dp.Jumlah_produk) as jumlah_terjual from produk p join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk join pesanan ps on ps.id_pesanan = dp.pesanan_id_pesanan join pengantar pe on ps.pengantar_id_pengantar = pe.id_pengantar where p.status_produk = 'Aktif' and pe.tanggal_pengantar <= %s and pe.tanggal_pengantar >= %s group by p.nama_produk order by jumlah_terjual desc limit 5"
+    query1 = "select p.nama_produk, sum(dp.jumlah_produk) as jumlah_terjual, sum(dp.harga * dp.Jumlah_produk) as jumlah_penghasilan from produk p join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk join pesanan ps on ps.id_pesanan = dp.pesanan_id_pesanan join pengantar pe on ps.pengantar_id_pengantar = pe.id_pengantar where p.status_produk = 'Aktif' and pe.tanggal_pengantar <= %s and pe.tanggal_pengantar >= %s group by p.nama_produk order by jumlah_terjual desc limit 5"
     try:
         clear()
         logo()
@@ -656,7 +661,7 @@ def produk_laris_1bulan(idakun):
 
 def produk_kurang_1minggu(idakun):
     kursor, conn = koneksiDB()
-    query1 = "select p.nama_produk, sum(dp.harga * dp.Jumlah_produk) as jumlah_terjual from produk p join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk join pesanan ps on ps.id_pesanan = dp.pesanan_id_pesanan join pengantar pe on ps.pengantar_id_pengantar = pe.id_pengantar where p.status_produk = 'Aktif' and pe.tanggal_pengantar <= %s and pe.tanggal_pengantar >= %s group by p.nama_produk order by jumlah_terjual asc limit 5"
+    query1 = "select p.nama_produk, sum(dp.jumlah_produk) as jumlah_terjual, sum(dp.harga * dp.Jumlah_produk) as jumlah_penghasilan from produk p join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk join pesanan ps on ps.id_pesanan = dp.pesanan_id_pesanan join pengantar pe on ps.pengantar_id_pengantar = pe.id_pengantar where p.status_produk = 'Aktif' and pe.tanggal_pengantar <= %s and pe.tanggal_pengantar >= %s group by p.nama_produk order by jumlah_terjual asc limit 5"
     try:
         clear()
         logo()
@@ -677,7 +682,7 @@ def produk_kurang_1minggu(idakun):
 
 def produk_kurang_1bulan(idakun):
     kursor, conn = koneksiDB()
-    query1 = "select p.nama_produk, sum(dp.harga * dp.Jumlah_produk) as jumlah_terjual from produk p join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk join pesanan ps on ps.id_pesanan = dp.pesanan_id_pesanan join pengantar pe on ps.pengantar_id_pengantar = pe.id_pengantar where p.status_produk = 'Aktif' and pe.tanggal_pengantar <= %s and pe.tanggal_pengantar >= %s group by p.nama_produk order by jumlah_terjual asc limit 5"
+    query1 = "select p.nama_produk, sum(dp.jumlah_produk) as jumlah_terjual, sum(dp.harga * dp.Jumlah_produk) as jumlah_penghasilan from produk p join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk join pesanan ps on ps.id_pesanan = dp.pesanan_id_pesanan join pengantar pe on ps.pengantar_id_pengantar = pe.id_pengantar where p.status_produk = 'Aktif' and pe.tanggal_pengantar <= %s and pe.tanggal_pengantar >= %s group by p.nama_produk order by jumlah_terjual asc limit 5"
     try:
         clear()
         logo()
@@ -747,6 +752,8 @@ def lihat_detail_pesanan(idakun):
         query = """select p.nama_produk, p.harga, dp.jumlah_produk, d.diskon, dp.pesanan_id_pesanan as id_pesanan
         from detail_pesanan dp
         join produk p on p.id_produk = dp.produk_id_produk
+        join pesanan pe on pe.id_pesanan = dp.pesanan_id_pesanan
+        where pe.status_pesanan = 'Diterima'
         left join diskon d on d.id_diskon = dp.diskon_id_diskon
         """
         kursor.execute(query)
@@ -776,18 +783,20 @@ def detail_karyawan(idakun):
             header= [d[0]for d in kursor.description]
             print (tabulate(data, headers=header, tablefmt='psql'))
             print('=====MENU KARYAWAN=====')
-            print("(1). Melihat Semua Karyawan\n(2). Menambahkan Karyawan\n(3). Memecat Karyawan\n(4). Exit")
-            data = input('Masukkan Pilihan Menu >> ')
-            if data == '1':
+            data = questionary.select(
+            "Pilih Menu Karyawan:",
+            choices=["Melihat Semua Karyawan", "Menambahkan Karyawan", "Memecat Karyawan", "koki"]
+            ).ask()
+            if data == 'Melihat Semua Karyawan':
                 lihat_karyawan(idakun)
                 continue
-            elif data == '2':
+            elif data == 'Menambahkan Karyawan':
                 tambah_karyawan(idakun)
                 continue
-            elif data == '3':
+            elif data == 'Memecat Karyawan':
                 pecat_karyawan(idakun)
                 continue
-            elif data == '4':
+            elif data == 'Exit':
                 break
             else:
                 print('Pilihan Tidak Ada')
@@ -847,6 +856,10 @@ def pecat_karyawan(idakun):
             try:
                 admin_input = int(input('Pilih Id Karyawan yang mau dipecat: '))
                 while True:
+                    if admin_input.isalpha():
+                        print('Id Karyawan yang anda masukkan salah')
+                        admin_input = int(input('Pilih Id Karyawan yang mau dipecat: '))
+                        continue
                     if admin_input not in data_list:
                         print('Id Karyawan yang anda masukkan salah')
                         admin_input = int(input('Pilih Id Karyawan yang mau dipecat: '))
@@ -854,6 +867,7 @@ def pecat_karyawan(idakun):
                     break
             except ValueError:
                 print("Input harus berupa angka!")
+                enter()
                 continue
             kursor.execute(query3, (admin_input,))
             conn.commit()
@@ -862,6 +876,7 @@ def pecat_karyawan(idakun):
             break
     except Exception as e:
         print(f"Terjadi Kesalahan : {e}")
+        enter()
     finally:
         kursor.close()
         conn.close()
@@ -874,13 +889,15 @@ def tambah_karyawan(idakun):
         print(f'MENU ADMIN >> DETAIL KARYAWAN >> TAMBAH KARYAWAN'.center(86))
         batas()
         nama_karyawan = input('Masukkan Nama Karyawan: ')
-        nama_karyawan = cek_username(nama_karyawan)
+        nama_karyawan = cek_nama(nama_karyawan)
         print('Masukkan Tanggal Lahir Karyawan')
         ttl_karyawan = tanggal()
         email_karyawan = input('Masukkan email karyawan: ')
         email_karyawan = cek_email_karyawan(email_karyawan)
         no_telp_karyawan = input('Masukkan NO Telp karyawan: ')
         no_telp_karyawan = cek_no_telp_karyawan(no_telp_karyawan)
+        username_karyawan = input('Masukkan Username Karyawan: ')
+        username_karyawan = cek_username(username_karyawan)
         password_karyawan = input('Masukkan Password karyawan: ')
         password_karyawan = cek_password(password_karyawan)
         jabatan = questionary.select(
@@ -898,7 +915,7 @@ def tambah_karyawan(idakun):
         query1 = "insert into karyawan (nama_karyawan, tanggal_lahir, email, no_telp, jabatan_id_jabatan, akun_id_akun, status_karyawan) values (%s, %s, %s, %s, %s, %s, 'Aktif');"
         query2 = "insert into akun (username, password, role_id_role) values (%s, %s, 2) returning id_akun;"
         try:
-            kursor.execute(query2, (nama_karyawan, password_karyawan))
+            kursor.execute(query2, (username_karyawan, password_karyawan))
             cocokan = kursor.fetchone()
             id_akun = cocokan[0]
             kursor.execute(query1, (nama_karyawan, ttl_karyawan, email_karyawan, no_telp_karyawan, jabatan_id, id_akun))
@@ -929,27 +946,24 @@ def perbarui_produk(idakun):
             data = kursor.fetchall()
             header= [d[0]for d in kursor.description]
             print (tabulate(data, headers=header, tablefmt='psql'))
-            print('=====PILIH MENU PRODUK=====')
-            print('(1). Hapus Produk\n(2). Kembalikan Produk\n(3). Tambah Produk\n(4). Ubah Harga Produk\n(5). Exit')
-            admin_input = input('Masukkan Pilihan Anda >> ')
-            if admin_input == '1':
+            admin_input = questionary.select(
+            "Pilih Menu Produk:",
+            choices=["Hapus Produk", "Kembalikan Produk", "Tambah Produk", "Ubah Harga Produk"]
+            ).ask()
+            if admin_input == 'Hapus Produk':
                 hapus_produk(idakun)
                 continue
-            elif admin_input == '2':
+            elif admin_input == 'Kembalikan Produk':
                 kembali_produk(idakun)
                 continue
-            elif admin_input == '3':
+            elif admin_input == 'Tambah Produk':
                 tambah_produk(idakun)
                 continue
-            elif admin_input == '4':
+            elif admin_input == 'Ubah Harga Produk':
                 ubah_harga(idakun)
                 continue
-            elif admin_input == '5':
+            elif admin_input == 'Exit':
                 break
-            else:
-                print('Pilhan Tidak Ada')
-                enter()
-                continue
         except Exception as e:
                 print(f"Terjadi Kesalahan : {e}")
                 enter()
@@ -1026,6 +1040,8 @@ def kembali_produk(idakun):
                 print('Tidak Ada Data Yang Bisa Dikembalikan')
                 enter()
                 break
+            kursor.execute(query1)
+            data = kursor.fetchall()
             header= [d[0]for d in kursor.description]
             print(tabulate(data, headers=header, tablefmt='psql'))
             kursor.execute(query2)
@@ -1216,11 +1232,13 @@ def lihat_pesanan_customer(idakun):
                 try:
                     customer_input = int(input('Pilih Id Pesanan Yang Mau Dicek: '))
                     if customer_input not in data_list:
+                        print("Pilihan Id Pesanan Tidak Ada Di Pilihan")
                         customer_input = int(input('Pilih Id Pesanan Yang Mau Dicek: '))
                         continue
                     break
                 except ValueError:
                     print("Input harus berupa angka!")
+                    enter()
                     continue
             lihat_satu_pesanan(idakun, customer_input)
             pilih_menu = questionary.select(
@@ -1423,25 +1441,30 @@ def struk_pesanan(nama_pemesan, alamat_pesanan, metode_pembayaran, produk_dipesa
         print(f'MENU ADMIN >> LIHAT PRODUK >> STRUK PESANAN'.center(86))
         batas()
         print(f"Nama Pemesan adalah {nama_pemesan}")
-        batas()
         banyak = len(produk_dipesan)
         simpan_pesanan = []
         kursor.execute(query2, (area_pesanan, ))
         harga_antar = kursor.fetchone()
         harga_antar = harga_antar[0]
+        harga_pesanan = harga_pesanan + harga_antar
         for i in range(banyak):
             kursor.execute(query, (produk_dipesan[i],))
             data = kursor.fetchone()
             harga_produk = data[0]
             pesanan = [produk_dipesan[i], jumlah[i], harga_produk]
             simpan_pesanan.append(pesanan)
-        print(tabulate(simpan_pesanan, headers =["Produk","jumlah", "Harga Produk"]))
-        batas()
-        print(f'Total Harga Pesanan = {harga_pesanan}')
+        print(tabulate(simpan_pesanan, headers =["Produk","jumlah", "Harga Produk"], tablefmt="grid"))
         print(f"diskon produk : {diskon_produk_asli}")
+        print(f'Harga ongkir produk : {harga_antar}')
+        print(f'Total Harga Pesanan = {harga_pesanan}')
         print(f"Alamat Pesanan Berada Di {alamat_pesanan} dan Berada di area {area_pesanan}")
         print(f"Metode Pembayaran Menggunakan {metode_pembayaran}")
-        enter()
+        customer_pilih = questionary.select(
+            "Apakah Anda seluruh Pesanan Anda sudah Benar?:",
+            choices=["Iya", "Tidak"]
+            ).ask()
+        if customer_pilih == "Tidak":
+            menu_customer()
     except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
     kursor.close()
@@ -1470,9 +1493,7 @@ def transaksi_pesanan(idakun, produk_dipesan, jumlah, sisa_stock, id_produk):
             simpan_pesanan.append(pesanan)
             harga_pesanan = harga_pesanan + (harga_produk * jumlah[i])
         harga_pesanan = harga_pesanan * diskon_produk
-        batas()
-        print(tabulate(simpan_pesanan, headers =["Produk","jumlah", "Harga"]))
-        batas()
+        print(tabulate(simpan_pesanan, headers =["Produk","jumlah", "Harga"],tablefmt="grid"))
         print(f'Total Harga Pesanan = {harga_pesanan}')
         print(f"diskon : {diskon_produk_asli}%")
         customer_pilih = questionary.select(
@@ -1484,6 +1505,7 @@ def transaksi_pesanan(idakun, produk_dipesan, jumlah, sisa_stock, id_produk):
             struk_pesanan(nama_pemesan, alamat_pesanan, metode_pembayaran, produk_dipesan, jumlah, harga_pesanan, area_pesanan, diskon_produk_asli)
             tanggal = dt.date.today()
             simpan_data(idakun, jumlah, sisa_stock, nama_pemesan, alamat_pesanan, id_area_pesanan, metode_pembayaran, id_produk, tanggal, Status_Transaksi, harga, id_diskon)
+
         elif customer_pilih == "Tidak":
             pesanan_customer(idakun)
     except Exception as e:
@@ -1774,6 +1796,12 @@ def kelola_pesanan_cust(idkaryawan):
             id_karyawan = id_karyawan[0]
             #Menampilkan List pesanan
             kursor.execute(query1)
+            data = kursor.fetchone()
+            if data is None:
+                print('Tidak Ada Pesanan Masuk')
+                enter()
+                break
+            kursor.execute(query1)
             data = kursor.fetchall()
             header = [d[0] for d in kursor.description]
             print (tabulate(data, headers=header, tablefmt='psql'))
@@ -1791,6 +1819,7 @@ def kelola_pesanan_cust(idkaryawan):
                     continue
             except ValueError:
                 print ("Inputan harus berupa angka!!")
+                enter()
                 continue
             clear()
             #Menampilkan Nama Pemesan & No Telp
@@ -1804,7 +1833,7 @@ def kelola_pesanan_cust(idkaryawan):
             hasil = kursor.fetchone()
             nama, no_telp = hasil
 
-            print("\n========== DATA PEMESAN ==========")
+            print("\n========== DATA PEMESAN ============")
             print(f"Nama Pemesan : {nama}")
             print(f"No Telp      : {no_telp}")
             print("====================================\n")
@@ -1816,11 +1845,8 @@ def kelola_pesanan_cust(idkaryawan):
             print (tabulate(data2, headers=header2, tablefmt='psql'))
             
             #Konfirmasi
-            print ("Apakah pesanan akan dikirimkan?")
+            print ("Konfirmasi pesanan akan dikirimkan")
             enter()
-            
-            # Insert tanggal pengantaran ke DB
-            
            
             #Update Status
             kursor.execute(query3, (id_karyawan, input_id))
@@ -1837,26 +1863,31 @@ def kelola_pesanan_cust(idkaryawan):
         except Exception as e:
             print (f"Terjadi Kesalahan : {e}")
             
-        finally:
-            kursor.close()
-            conn.close()           
         break
+    kursor.close()
+    conn.close()           
  
 def konfirmasi_pesanan(idkaryawan):
     kursor, conn = koneksiDB()
-    query1 = "SELECT id_pesanan, nama_pemesan from pesanan order by id_pesanan where status_pesanan = 'Diantar' "
+    query1 = "SELECT id_pesanan, nama_pemesan from pesanan where status_pesanan = 'Diantar' order by id_pesanan"
     query2 = "update pesanan set status_pesanan = 'Diterima', pengantar_id_pengantar = %s where id_pesanan = %s"
     query3 = "select id_karyawan from karyawan where akun_id_akun = %s"
     while True:
         try:
             clear()
             logo()
-            print(f'MENU KARYAWAN >> KONFIRMASI PRODUK'.center(86))
+            print(f'MENU KARYAWAN >> KONFIRMASI PRODUK\n'.center(86))
             batas()
             kursor.execute(query3, (idkaryawan,))
             id_pengantar = kursor.fetchone()
             id_pengantar = id_pengantar[0]
             #Menampilkan List pesanan
+            kursor.execute(query1)
+            data = kursor.fetchone()
+            if data is None:
+                print('Tidak Ada Pesanan Yang bisa Diantar')
+                enter()
+                break
             kursor.execute(query1)
             data = kursor.fetchall()
             header = [d[0] for d in kursor.description]
@@ -1864,16 +1895,18 @@ def konfirmasi_pesanan(idkaryawan):
             #Validasi ID
             data_list = [i[0] for i in data]
             print(f'======PILIH ID PESANAN======'.center(86))
-            batas()  
-            try:
-                input_id = int (input("Pilih ID pesanan yang mau diproses: "))
-                while input_id not in data_list:
-                    print ("ID Pesanan yang anda masukan salah..")
+            batas() 
+            while True: 
+                try:
                     input_id = int (input("Pilih ID pesanan yang mau diproses: "))
+                    if input_id not in data_list:
+                        print ("ID Pesanan yang anda masukan salah..")
+                        input_id = int (input("Pilih ID pesanan yang mau diproses: "))
+                        continue
+                    break
+                except ValueError:
+                    print ("Inputan harus berupa angka!!")
                     continue
-            except ValueError:
-                print ("Inputan harus berupa angka!!")
-                continue
             clear()
             
             tanggal_sekarang = dt.date.today()
@@ -1886,18 +1919,15 @@ def konfirmasi_pesanan(idkaryawan):
             conn.commit()
             print ("Pesanan sudah diterima!!")  
             enter()
-            
         except Exception as e:
             print (f"Terjadi Kesalahan : {e}")
-            
-        finally:
-            kursor.close()
-            conn.close() 
         break
+    kursor.close()
+    conn.close() 
 
 def menu_karyawan(idkaryawan):
     kursor, conn = koneksiDB()
-    query = "select k.jabatan_id_jabatan from karyawan k join akun a on a.id_akun = k.akun_id_akun where id_akun = %s"
+    query = "select k.jabatan_id_jabatan from karyawan k join akun a on a.id_akun = k.akun_id_akun where a.id_akun = %s"
     while True:
         try:
             kursor.execute(query, (idkaryawan,))
@@ -1905,40 +1935,44 @@ def menu_karyawan(idkaryawan):
             id_jabatan = id_jabatan[0]
             clear()
             logo()
-            print(f'MENU KARYAWAN'.center(86))
+            print(f'MENU KARYAWAN\n'.center(86))
             batas()
-            print ("1. Melihat Produk\n2. Mengelola Stock\n3. Mengelola Pesanan\n4. Konfirmasi Pesanan\n5. Keluar")
-            pilihan_karyawan = input ("Masukan pilihan:")
-            if pilihan_karyawan == "1":
+            pilihan_karyawan = questionary.select(
+            "Pilih Menu Karyawan:",
+            choices=["Melihat Produk", "Mengelola Stock", "Mengelola Pesanan", "Konfirmasi Pesanan", "Exit"]
+            ).ask()
+            if pilihan_karyawan == "Melihat Produk":
                 lihat_produk_karyawan(idkaryawan)
                 continue
-            elif pilihan_karyawan == "2":
+            elif pilihan_karyawan == "Mengelola Stock":
                 if id_jabatan == 2:
                     update_stock(idkaryawan)
                     continue
                 else:
                     print('Anda Tidak memiliki Akses')
+                    enter()
                     continue
-            elif pilihan_karyawan == "3":  
+            elif pilihan_karyawan == "Mengelola Pesanan":  
                 if id_jabatan == 2:
                     kelola_pesanan_cust(idkaryawan)
                     continue
                 else:
                     print('Anda Tidak memiliki Akses')
+                    enter()
                     continue
-            elif pilihan_karyawan == "4":  
+            elif pilihan_karyawan == "Konfirmasi Pesanan":  
                 if id_jabatan == 1:
                     konfirmasi_pesanan(idkaryawan)
                     continue
                 else:
                     print('Anda Tidak memiliki Akses')
+                    enter()
                     continue
-            elif pilihan_karyawan == "5":  
+            elif pilihan_karyawan == "Exit":  
                 break
-            else:
-                print("Pilihan Tidak Valid!")
         except:
             print ("Terjadi Kesalahan")
+            enter()
     kursor.close()
     conn.close()
 
