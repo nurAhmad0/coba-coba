@@ -32,6 +32,10 @@ def enter():
 def clear():
     os.system("cls")
 
+def code():
+    print("""
+    """)
+
 def logo():
     print ('''
     +================================================================================+
@@ -1488,11 +1492,21 @@ def struk_pesanan(nama_pemesan, alamat_pesanan, metode_pembayaran, produk_dipesa
         if customer_pilih == "Tidak":
             menu_customer()
         elif customer_pilih == "Iya":
-            pembayaran()
+            if metode_pembayaran == "Transfer":
+                pembayaran()
     except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
     kursor.close()
     conn.close()
+
+def pembayaran():
+    clear()
+    logo()
+    print(f'PEMBAYARAN'.center(86))
+    batas()
+    print("Silahkan Scan Qris dibawah ini")
+    code()
+    enter()
 
 def transaksi_pesanan(idakun, produk_dipesan, jumlah, sisa_stock, id_produk):
     kursor, conn = koneksiDB()
