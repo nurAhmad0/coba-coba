@@ -1712,58 +1712,64 @@ def lihat_produk_karyawan(idkaryawan):
 
 def update_stock(idkaryawan):
     kursor, conn = koneksiDB()
-    try:
-        clear()
-        logo()
-        print(f'MENU KARYAWAN >> UPDATE STOCK PRODUK'.center(86))
-        batas()
-        query = "SELECT id_produk, nama_produk, stock from produk order by id_produk"
-        kursor.execute(query)
-        data= kursor.fetchall()
-        header= [d[0] for d in kursor.description]
-        
-        print(f'======DAFTAR PRODUK======'.center(86))
-        batas()
-        print (tabulate(data, headers=header, tablefmt='psql'))
-        
-        
-        print(f'======UPDATE PRODUK======'.center(86))
-        batas()
-        id_produk = input ("Masukan id Produk:  ")
-        kursor.execute("SELECT stock from produk where id_produk = %s", (id_produk,))
-        baris = kursor.fetchone()
-        
-        if not baris:
-            print ("ID produk tidak ditemukan")
-            return
-        
-        stock_sekarang= baris [0]
-        print (f"Stock saat ini:     {stock_sekarang}")
-        
-        
-        print(f'\n======UPDATE STOCK======'.center(86))
-        batas()
-        print ("1. Tambah Stock")
-        pilihan = input ("masukan pilihan:")
-
-        if pilihan == "1":
-            tambah = int(input("Tambah Stock: "))
-            stock_baru = stock_sekarang + tambah
+    while True:
+        try:
+            clear()
+            logo()
+            print(f'MENU KARYAWAN >> UPDATE STOCK PRODUK'.center(86))
+            batas()
+            query = "SELECT id_produk, nama_produk, stock from produk order by id_produk"
+            kursor.execute(query)
+            data= kursor.fetchall()
+            header= [d[0] for d in kursor.description]
             
-            query3 ="UPDATE produk SET stock = %s WHERE id_produk = %s"
-            kursor.execute(query3, (stock_baru, id_produk))
-        else:
-            print ("Tidak Valid")
-            return
-        conn.commit()
-        print (f"Stock berhasil di perbarui: {stock_baru}")
-        enter()
-    except Exception as e:
-        print (f"Terjadi kesalahan: {e}")
-        conn.rollback()
-    finally:
-        kursor.close()
-        conn.close() 
+            print(f'======DAFTAR PRODUK======'.center(86))
+            batas()
+            print (tabulate(data, headers=header, tablefmt='psql'))
+            
+            
+            print(f'======UPDATE PRODUK======'.center(86))
+            batas()
+            id_produk = input ("Masukan id Produk:  ")
+            kursor.execute("SELECT stock from produk where id_produk = %s", (id_produk,))
+            baris = kursor.fetchone()
+            
+            if not baris:
+                print ("ID produk tidak ditemukan")
+                return
+            
+            stock_sekarang= baris [0]
+            print (f"Stock saat ini:     {stock_sekarang}")
+            
+            
+            print(f'\n======UPDATE STOCK======'.center(86))
+            batas()
+            print ("1. Tambah Stock")
+            pilihan = input ("masukan pilihan:")
+
+            if pilihan == "1":
+                tambah = int(input("Tambah Stock: "))
+                stock_baru = stock_sekarang + tambah
+                
+                query3 ="UPDATE produk SET stock = %s WHERE id_produk = %s"
+                kursor.execute(query3, (stock_baru, id_produk))
+            else:
+                print ("Tidak Valid")
+                return
+            conn.commit()
+            print (f"Stock berhasil di perbarui: {stock_baru}")
+            pilih = questionary.select(
+            "Apakah mau Update Stock Lain?:",
+            choices=['iya', 'tidak']).ask()
+            if pilih == 'iya':
+                continue
+            elif pilih == "tidak":
+                break
+        except Exception as e:
+            print (f"Terjadi kesalahan: {e}")
+            conn.rollback()
+    kursor.close()
+    conn.close() 
                         
 def kelola_pesanan_cust(idkaryawan):
     clear()
@@ -1858,10 +1864,16 @@ def kelola_pesanan_cust(idkaryawan):
             data3 = kursor.fetchall()
             header3 = [d[0] for d in kursor.description]
             print (tabulate(data3, headers=header3, tablefmt='psql'))
-            
-            
+            pilih = questionary.select(
+            "Apakah mau Kelola Pesanan Lain?:",
+            choices=['iya', 'tidak']).ask()
+            if pilih == 'iya':
+                continue
+            elif pilih == "tidak":
+                break
         except Exception as e:
             print (f"Terjadi Kesalahan : {e}")
+            enter()
             
         break
     kursor.close()
