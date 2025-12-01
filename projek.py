@@ -551,7 +551,7 @@ def menu_admin(idakun):
         batas()
         input_admin = questionary.select(
         "Masukkan Pilihan Menu Admin:",
-        choices=['Melihat Produk','Memperbarui Produk','Laporan','Melihat pesanan','Melihat Detail Pesanan','Detail Karyawan','Diskon','Exit']
+        choices=['Melihat Produk','Memperbarui Produk','Laporan','Melihat pesanan','Melihat Detail Pesanan','Detail Karyawan','Buat Diskon','Lihat Diskon','Exit']
         ).ask()
         if input_admin == 'Melihat Produk':
             lihat_produkA(idakun)
@@ -571,11 +571,33 @@ def menu_admin(idakun):
         elif input_admin == 'Detail Karyawan':
             detail_karyawan(idakun)
             continue
-        elif input_admin == 'Diskon':
+        elif input_admin == 'Buat Diskon':
             diskon(idakun)
+            continue
+        elif input_admin == 'Lihat Diskon':
+            Lihat_diskon(idakun)
             continue
         elif input_admin == 'Exit':
             break
+
+def Lihat_diskon(idakun):
+    kursor, conn = koneksiDB()
+    query = "select * from diskon"
+    try:
+        clear()
+        logo()
+        print(f'MENU ADMIN >> LIHAT DISKON'.center(86))
+        batas()
+        kursor.execute(query)
+        data = kursor.fetchall()
+        header= [d[0]for d in kursor.description]
+        print (tabulate(data, headers=header, tablefmt='psql'))
+        enter()
+    except Exception as e:
+        print(f"Terjadi Kesalahan : {e}")
+    finally:
+        kursor.close()
+        conn.close()
 
 def laporan(idakun):
     kursor, conn = koneksiDB()
