@@ -41,8 +41,7 @@ def logo():
     |██║╚██╔╝██║██║   ██║██║   ██║██║    ██║  ██║██║   ██║██║╚██╗██║██╔══██║   ██║   |
     |██║ ╚═╝ ██║╚██████╔╝╚██████╔╝██║    ██████╔╝╚██████╔╝██║ ╚████║██║  ██║   ██║   |
     |╚═╝     ╚═╝ ╚═════╝  ╚═════╝ ╚═╝    ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝   ╚═╝   |
-    +================================================================================+   
-       ''')
+    +================================================================================+''')
 
 def login():
     while True:
@@ -1468,7 +1467,7 @@ def struk_pesanan(nama_pemesan, alamat_pesanan, metode_pembayaran, produk_dipesa
         kursor.execute(query2, (area_pesanan, ))
         harga_antar = kursor.fetchone()
         harga_antar = harga_antar[0]
-        harga_pesanan = harga_pesanan + harga_antar
+        harga_total = harga_pesanan + harga_antar
         for i in range(banyak):
             kursor.execute(query, (produk_dipesan[i],))
             data = kursor.fetchone()
@@ -1476,9 +1475,10 @@ def struk_pesanan(nama_pemesan, alamat_pesanan, metode_pembayaran, produk_dipesa
             pesanan = [produk_dipesan[i], jumlah[i], harga_produk]
             simpan_pesanan.append(pesanan)
         print(tabulate(simpan_pesanan, headers =["Produk","jumlah", "Harga Produk"], tablefmt="grid"))
+        print(f"Subtotal  : {harga_pesanan}")
         print(f"diskon produk : {diskon_produk_asli}")
         print(f'Harga ongkir produk : {harga_antar}')
-        print(f'Total Harga Pesanan = {harga_pesanan}')
+        print(f'Total Harga Pesanan = {harga_total}')
         print(f"Alamat Pesanan Berada Di {alamat_pesanan} dan Berada di area {area_pesanan}")
         print(f"Metode Pembayaran Menggunakan {metode_pembayaran}")
         customer_pilih = questionary.select(
@@ -1487,6 +1487,8 @@ def struk_pesanan(nama_pemesan, alamat_pesanan, metode_pembayaran, produk_dipesa
             ).ask()
         if customer_pilih == "Tidak":
             menu_customer()
+        elif customer_pilih == "Iya":
+            pembayaran()
     except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
     kursor.close()
@@ -1910,7 +1912,7 @@ def konfirmasi_pesanan(idkaryawan):
         try:
             clear()
             logo()
-            print(f'MENU KARYAWAN >> KONFIRMASI PRODUK\n'.center(86))
+            print(f'MENU KARYAWAN >> KONFIRMASI PRODUK'.center(86))
             batas()
             kursor.execute(query3, (idkaryawan,))
             id_pengantar = kursor.fetchone()
@@ -1969,7 +1971,7 @@ def menu_karyawan(idkaryawan):
             id_jabatan = id_jabatan[0]
             clear()
             logo()
-            print(f'MENU KARYAWAN\n'.center(86))
+            print(f'MENU KARYAWAN'.center(86))
             batas()
             pilihan_karyawan = questionary.select(
             "Pilih Menu Karyawan:",
