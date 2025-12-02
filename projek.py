@@ -209,19 +209,19 @@ def cek_nama(nama):
         try:
             if any(s in nama for s in simbol):
                 print('nama Tidak Sesuai Harus Terdiri Dari Huruf dan Angka')
-                nama = input('Masukkan Pesanan Atas Nama >> ')
+                nama = input('Masukkan Nama Karyawan >> ')
                 continue
             if not nama.isalpha():
                 print("nama tidak boleh pakai angka")
-                nama = input('Masukkan Pesanan Atas Nama >> ')
+                nama = input('Masukkan Nama Karyawan >> ')
                 continue
             if len(nama) < 3:
                 print("nama minimal 3 karakter")
-                nama = input('Masukkan Pesanan Atas Nama >> ')
+                nama = input('Masukkan Nama Karyawan >> ')
                 continue
             if not nama.strip():
                 print("nama tidak boleh kosong atau spasi saja!")
-                nama = input('Masukkan Pesanan Atas Nama >> ')
+                nama = input('Masukkan Nama Karyawan >> ')
                 continue
         except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
@@ -796,8 +796,8 @@ def lihat_detail_pesanan(idakun):
         from detail_pesanan dp
         join produk p on p.id_produk = dp.produk_id_produk
         join pesanan pe on pe.id_pesanan = dp.pesanan_id_pesanan
-        where pe.status_pesanan = 'Diterima'
         left join diskon d on d.id_diskon = dp.diskon_id_diskon
+        where pe.status_pesanan = 'Diterima'
         """
         kursor.execute(query)
         data = kursor.fetchall()
@@ -806,6 +806,7 @@ def lihat_detail_pesanan(idakun):
         enter()
     except Exception as e:
         print(f"Terjadi Kesalahan : {e}")
+        enter()
     kursor.close()
     conn.close()
 
@@ -828,7 +829,7 @@ def detail_karyawan(idakun):
             print('=====MENU KARYAWAN=====')
             data = questionary.select(
             "Pilih Menu Karyawan:",
-            choices=["Melihat Semua Karyawan", "Menambahkan Karyawan", "Memecat Karyawan", "koki"]
+            choices=["Melihat Semua Karyawan", "Menambahkan Karyawan", "Memecat Karyawan", "Exit"]
             ).ask()
             if data == 'Melihat Semua Karyawan':
                 lihat_karyawan(idakun)
@@ -899,10 +900,6 @@ def pecat_karyawan(idakun):
             try:
                 admin_input = int(input('Pilih Id Karyawan yang mau dipecat: '))
                 while True:
-                    if admin_input.isalpha():
-                        print('Id Karyawan yang anda masukkan salah')
-                        admin_input = int(input('Pilih Id Karyawan yang mau dipecat: '))
-                        continue
                     if admin_input not in data_list:
                         print('Id Karyawan yang anda masukkan salah')
                         admin_input = int(input('Pilih Id Karyawan yang mau dipecat: '))
@@ -991,7 +988,7 @@ def perbarui_produk(idakun):
             print (tabulate(data, headers=header, tablefmt='psql'))
             admin_input = questionary.select(
             "Pilih Menu Produk:",
-            choices=["Hapus Produk", "Kembalikan Produk", "Tambah Produk", "Ubah Harga Produk"]
+            choices=["Hapus Produk", "Kembalikan Produk", "Tambah Produk", "Ubah Harga Produk", "Exit"]
             ).ask()
             if admin_input == 'Hapus Produk':
                 hapus_produk(idakun)
@@ -1786,32 +1783,38 @@ def update_stock(idkaryawan):
             
             print(f'======UPDATE PRODUK======'.center(86))
             batas()
-            id_produk = input ("Masukan id Produk:  ")
+            kursor.execute("SELECT Id_produk from produk where status_produk = 'Aktif'")
+            data = kursor.fetchall()
+            data_list = [i[0] for i in data]
+            while True:
+                try:
+                    id_produk = int(input("Masukan id Produk:  "))
+                    if id_produk not in data_list:
+                        print ("ID produk tidak ditemukan")
+                        enter()
+                        continue
+                except Exception as e:
+                    print (f"Terjadi Kesalahan : {e}")
+                    print("Input harus berupa Angka")
+                    enter()
+                    continue
+                break
             kursor.execute("SELECT stock from produk where id_produk = %s", (id_produk,))
             baris = kursor.fetchone()
-            
-            if not baris:
-                print ("ID produk tidak ditemukan")
-                return
-            
             stock_sekarang= baris [0]
             print (f"Stock saat ini:     {stock_sekarang}")
-            
-            
-            print(f'\n======UPDATE STOCK======'.center(86))
-            batas()
-            print ("1. Tambah Stock")
-            pilihan = input ("masukan pilihan:")
-
-            if pilihan == "1":
-                tambah = int(input("Tambah Stock: "))
-                stock_baru = stock_sekarang + tambah
-                
-                query3 ="UPDATE produk SET stock = %s WHERE id_produk = %s"
-                kursor.execute(query3, (stock_baru, id_produk))
-            else:
-                print ("Tidak Valid")
-                return
+            while True:
+                try:
+                    tambah = int(input("Tambah Stock: "))
+                    stock_baru = stock_sekarang + tambah
+                except Exception as e:
+                    print (f"Terjadi Kesalahan : {e}")
+                    print("Input harus berupa Angka")
+                    enter()
+                    continue
+                break 
+            query3 ="UPDATE produk SET stock = %s WHERE id_produk = %s"
+            kursor.execute(query3, (stock_baru, id_produk))
             conn.commit()
             print (f"Stock berhasil di perbarui: {stock_baru}")
             pilih = questionary.select(
