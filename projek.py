@@ -1995,16 +1995,21 @@ def konfirmasi_pesanan(idkaryawan):
 
 def menu_karyawan(idkaryawan):
     kursor, conn = koneksiDB()
-    query = "select k.jabatan_id_jabatan from karyawan k join akun a on a.id_akun = k.akun_id_akun where a.id_akun = %s"
+    query = "select k.jabatan_id_jabatan, k.status_karyawan from karyawan k join akun a on a.id_akun = k.akun_id_akun where a.id_akun = %s"
     while True:
         try:
             kursor.execute(query, (idkaryawan,))
-            id_jabatan = kursor.fetchone()
-            id_jabatan = id_jabatan[0]
+            karyawan = kursor.fetchone()
+            id_jabatan = karyawan[0]
+            status_karyawan = karyawan[1]
             clear()
             logo()
             print(f'MENU KARYAWAN'.center(86))
             batas()
+            if status_karyawan == "Tidak Aktif":
+                print("Anda tidak memiliki Akses untuk Menu Karyawan")
+                enter()
+                break
             pilihan_karyawan = questionary.select(
             "Pilih Menu Karyawan:",
             choices=["Melihat Produk", "Mengelola Stock", "Mengelola Pesanan", "Konfirmasi Pesanan", "Exit"]
