@@ -1895,8 +1895,21 @@ def kelola_pesanan_cust(idkaryawan):
             WHERE p.id_pesanan = %s
             '''
             query_total_harga = """
-            select a.harga_antar, d.diskon, sum()
+            select a.harga_antar, d.diskon, sum(dp.jumlah_produk * dp.harga) 
+            from detail_pesanan dp 
+            left join diskon d on d.id_diskon = dp.diskon_id_diskon
+            left join pesanan p on p.id_pesanan = dp.pesanan_id_pesanan
+            left join alamat_pesanan ap on ap.id_alamat_pesanan = p.alamat_pesanan_id_alamat_pesanan
+            left join area a on a.id_area = ap.area_id_area
+            where p.id_pesanan = %s
+            group by a.harga_antar, d.diskon
             """
+            kursor.execute(query_total_harga, (input_id,))
+            harga = kursor.fetchone()
+            if harga[1] is None:
+                harga_total = harga[0] + harga[2]
+            elif harga[1] is not None:
+                harga_total = (harga[0] + harga[2]) * ((100 - harga[1]) / 100)
             kursor.execute(query_info, (input_id,))
             hasil = kursor.fetchone()
             nama, no_telp = hasil
@@ -1904,7 +1917,7 @@ def kelola_pesanan_cust(idkaryawan):
             print("\n========== DATA PEMESAN ============")
             print(f"Nama Pemesan : {nama}")
             print(f"No Telp      : {no_telp}")
-            print(f"Total Harga  : {no_telp}")
+            print(f"Total Harga  : {harga_total}")
             print("====================================\n")
         
             #Menampilkan Detail Pesanan
@@ -1947,6 +1960,13 @@ def konfirmasi_pesanan(idkaryawan):
     query1 = "SELECT id_pesanan, nama_pemesan from pesanan where status_pesanan = 'Diantar' order by id_pesanan"
     query2 = "update pesanan set status_pesanan = 'Diterima', pengantar_id_pengantar = %s where id_pesanan = %s"
     query3 = "select id_karyawan from karyawan where akun_id_akun = %s"
+    query4 = '''
+    select p.nama_pemesan, pr.nama_produk, dp.jumlah_produk, dp.harga, p.status_pesanan
+    from pesanan p
+    join detail_pesanan dp on p.id_pesanan=dp.pesanan_id_pesanan
+    join produk pr on dp.produk_id_produk = pr.id_produk 
+    where p.status_pesanan = 'Diantar' and id_pesanan = %s
+    '''
     while True:
         try:
             clear()
