@@ -1346,7 +1346,7 @@ def pesanan_customer(idakun):
         try:
             clear()
             logo()
-            print(f'MENU ADMIN >> PILIH PRODUK'.center(86))
+            print(f'MENU CUSTOMER >> PILIH PRODUK'.center(86))
             batas()
             kursor.execute(query1)
             data = kursor.fetchall()
@@ -1433,7 +1433,7 @@ def identitas_customer():
     while True:
         clear()
         logo()
-        print(f'MENU ADMIN >> PILIH PRODUK >> DATA PENERIMA PESANAN'.center(86))
+        print(f'MENU CUSTOMER >> PILIH PRODUK >> DATA PENERIMA PESANAN'.center(86))
         batas()
         nama_pemesan = input('Masukkan Pesanan Atas Nama >> ')
         nama_pemesan = cek_nama(nama_pemesan)
@@ -1478,7 +1478,7 @@ def struk_pesanan(nama_pemesan, alamat_pesanan, metode_pembayaran, produk_dipesa
 
         clear()
         logo()
-        print(f'MENU ADMIN >> LIHAT PRODUK >> STRUK PESANAN'.center(86))
+        print(f'MENU CUSTOMER >> LIHAT PRODUK >> STRUK PESANAN'.center(86))
         batas()
         print(f"Nama Pemesan adalah {nama_pemesan}")
         banyak = len(produk_dipesan)
@@ -1528,7 +1528,7 @@ def transaksi_pesanan(idakun, produk_dipesan, jumlah, sisa_stock, id_produk):
     try:
         clear()
         logo()
-        print(f'MENU ADMIN >> PILIH PRODUK'.center(86))
+        print(f'MENU CUSTOMER >> PILIH PRODUK'.center(86))
         batas()
         diskon_produk_asli, id_diskon = diskon_customer()
         diskon_produk = (100 - diskon_produk_asli) / 100
@@ -1751,7 +1751,7 @@ def lihat_produk_karyawan(idkaryawan):
         logo()
         print(f'MENU KARYAWAN >> LIHAT PRODUK'.center(86))
         batas()
-        query = "SELECT id_produk,nama_produk,harga FROM produk order by id_produk"
+        query = "SELECT id_produk,nama_produk,harga, stock FROM produk order by id_produk"
         kursor.execute(query)
         
         data = kursor.fetchall()
@@ -1894,6 +1894,9 @@ def kelola_pesanan_cust(idkaryawan):
             JOIN customer c ON p.customer_id_customer = c.id_customer
             WHERE p.id_pesanan = %s
             '''
+            query_total_harga = """
+            select a.harga_antar, d.diskon, sum()
+            """
             kursor.execute(query_info, (input_id,))
             hasil = kursor.fetchone()
             nama, no_telp = hasil
@@ -1901,6 +1904,7 @@ def kelola_pesanan_cust(idkaryawan):
             print("\n========== DATA PEMESAN ============")
             print(f"Nama Pemesan : {nama}")
             print(f"No Telp      : {no_telp}")
+            print(f"Total Harga  : {no_telp}")
             print("====================================\n")
         
             #Menampilkan Detail Pesanan
