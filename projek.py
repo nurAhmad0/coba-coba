@@ -1507,11 +1507,10 @@ def struk_pesanan(nama_pemesan, alamat_pesanan, metode_pembayaran, produk_dipesa
             "Apakah Anda seluruh Pesanan Anda sudah Benar?:",
             choices=["Iya", "Tidak"]
             ).ask()
-        if customer_pilih == "Tidak":
-            menu_customer()
-        elif customer_pilih == "Iya":
+        if customer_pilih == "Iya":
             if metode_pembayaran == "Transfer":
                 pembayaran()
+        return customer_pilih
     except Exception as e:
             print(f"Terjadi Kesalahan : {e}")
     kursor.close()
@@ -1558,9 +1557,10 @@ def transaksi_pesanan(idakun, produk_dipesan, jumlah, sisa_stock, id_produk):
             ).ask()
         if customer_pilih == "iya,Sudah Benar":
             nama_pemesan, alamat_pesanan, id_area_pesanan, metode_pembayaran, Status_Transaksi, area_pesanan = identitas_customer()
-            struk_pesanan(nama_pemesan, alamat_pesanan, metode_pembayaran, produk_dipesan, jumlah, harga_pesanan, area_pesanan, diskon_produk_asli)
-            tanggal = dt.date.today()
-            simpan_data(idakun, jumlah, sisa_stock, nama_pemesan, alamat_pesanan, id_area_pesanan, metode_pembayaran, id_produk, tanggal, Status_Transaksi, harga, id_diskon)
+            kondisi_pesanan = struk_pesanan(nama_pemesan, alamat_pesanan, metode_pembayaran, produk_dipesan, jumlah, harga_pesanan, area_pesanan, diskon_produk_asli)
+            if kondisi_pesanan == "Iya":
+                tanggal = dt.date.today()
+                simpan_data(idakun, jumlah, sisa_stock, nama_pemesan, alamat_pesanan, id_area_pesanan, metode_pembayaran, id_produk, tanggal, Status_Transaksi, harga, id_diskon)
 
         elif customer_pilih == "Tidak":
             pesanan_customer(idakun)
