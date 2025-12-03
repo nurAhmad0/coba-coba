@@ -1955,6 +1955,7 @@ def kelola_pesanan_cust(idkaryawan):
     kursor.close()
     conn.close()           
  
+
 def konfirmasi_pesanan(idkaryawan):
     kursor, conn = koneksiDB()
     query1 = "SELECT id_pesanan, nama_pemesan from pesanan where status_pesanan = 'Diantar' order by id_pesanan"
@@ -1965,7 +1966,7 @@ def konfirmasi_pesanan(idkaryawan):
     from pesanan p
     join detail_pesanan dp on p.id_pesanan=dp.pesanan_id_pesanan
     join produk pr on dp.produk_id_produk = pr.id_produk 
-    where p.status_pesanan = 'Diantar' and id_pesanan = %s
+    where p.status_pesanan = 'Diterima' and id_pesanan = %s
     '''
     while True:
         try:
@@ -1976,6 +1977,7 @@ def konfirmasi_pesanan(idkaryawan):
             kursor.execute(query3, (idkaryawan,))
             id_pengantar = kursor.fetchone()
             id_pengantar = id_pengantar[0]
+            
             #Menampilkan List pesanan
             kursor.execute(query1)
             data = kursor.fetchone()
@@ -1987,16 +1989,17 @@ def konfirmasi_pesanan(idkaryawan):
             data = kursor.fetchall()
             header = [d[0] for d in kursor.description]
             print (tabulate(data, headers=header, tablefmt='psql'))
+            
             #Validasi ID
             data_list = [i[0] for i in data]
             print(f'======PILIH ID PESANAN======'.center(86))
             batas() 
             while True: 
                 try:
-                    input_id = int (input("Pilih ID pesanan yang mau diproses: "))
+                    input_id = int (input("Pilih ID pesanan yang mau dikonfirmasi: "))
                     if input_id not in data_list:
                         print ("ID Pesanan yang anda masukan salah..")
-                        input_id = int (input("Pilih ID pesanan yang mau diproses: "))
+                        input_id = int (input("Pilih ID pesanan yang mau dikonfirmasi: "))
                         continue
                     break
                 except ValueError:
@@ -2004,21 +2007,74 @@ def konfirmasi_pesanan(idkaryawan):
                     continue
             clear()
             
+            #Menampilkan Nama Pemesan & No Telp
+            query_info = '''
+            SELECT p.nama_pemesan AS nama,c.no_telp AS no_telp
+            FROM pesanan p
+            JOIN customer c ON p.customer_id_customer = c.id_customer
+            WHERE p.id_pesanan = %s
+            '''
+            query_total_harga = """
+            select a.harga_antar, d.diskon, sum(dp.jumlah_produk * dp.harga) 
+            from detail_pesanan dp 
+            left join diskon d on d.id_diskon = dp.diskon_id_diskon
+            left join pesanan p on p.id_pesanan = dp.pesanan_id_pesanan
+            left join alamat_pesanan ap on ap.id_alamat_pesanan = p.alamat_pesanan_id_alamat_pesanan
+            left join area a on a.id_area = ap.area_id_area
+            where p.id_pesanan = %s
+            group by a.harga_antar, d.diskon
+            """
+            kursor.execute(query_total_harga, (input_id,))
+            harga = kursor.fetchone()
+            if harga[1] is None:
+                harga_total = harga[0] + harga[2]
+            elif harga[1] is not None:
+                harga_total = (harga[0] + harga[2]) * ((100 - harga[1]) / 100)
+                
+            kursor.execute(query_info, (input_id,))
+            hasil = kursor.fetchone()
+            nama, no_telp = hasil
+
+            print("\n========== DATA PEMESAN ============")
+            print(f"Nama Pemesan : {nama}")
+            print(f"No Telp      : {no_telp}")
+            print(f"Total Harga  : {harga_total}")
+            print("====================================\n")
+            
+            #Insert DB tanggal
             tanggal_sekarang = dt.date.today()
             queryy = "insert into pengantar (tanggal_pengantar, karyawan_id_karyawan) VALUES (%s, %s) returning id_pengantar"
             kursor.execute(queryy, (tanggal_sekarang, id_pengantar))
             id_pengantar_asli = kursor.fetchone()
             id_pengantar_asli = id_pengantar_asli[0]
+            
             #Update Status
             kursor.execute(query2, (id_pengantar_asli,input_id))
             conn.commit()
             print ("Pesanan sudah diterima!!")  
             enter()
+            
+            #Menampilkan Pesanan yang sudah selesai
+            kursor.execute(query4, (input_id,))
+            data_pesanan = kursor.fetchall()
+            header4 = [d[0] for d in kursor.description]
+            print (tabulate(data_pesanan, headers=header4, tablefmt='psql'))
+            
+            #Pilihan KAryawan
+            pilih = questionary.select(
+            "Apakah mau Kofirmasi Pesanan Lain?:",
+            choices=['iya', 'tidak']).ask()
+            if pilih == 'iya':
+                continue
+            elif pilih == "tidak":
+                break
+            
         except Exception as e:
             print (f"Terjadi Kesalahan : {e}")
-        break
+    
     kursor.close()
-    conn.close() 
+    conn.close()
+
 
 def menu_karyawan(idkaryawan):
     kursor, conn = koneksiDB()
