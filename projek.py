@@ -238,7 +238,7 @@ def cek_username(username):
                 print('Username Tidak Sesuai Harus Terdiri Dari Huruf')
                 username = input('Masukkan Username: ')
                 continue
-            if username.isdigit():
+            if not username.isalpha():
                 print("username tidak boleh pakai angka semua")
                 username = input('Masukkan Username: ')
                 continue
@@ -279,7 +279,7 @@ def cek_nama_produk(nama_produk):
                 print("nama_produk minimal 3 karakter")
                 nama_produk = input("Masukkan nama_produk: ")
                 continue
-            if nama_produk.isdigit():
+            if not nama_produk.isalpha():
                 print("Nama Tidak Boleh Ada Angka")
                 nama_produk = input("Masukkan nama_produk: ")
                 continue
@@ -1955,7 +1955,6 @@ def kelola_pesanan_cust(idkaryawan):
     kursor.close()
     conn.close()           
  
-
 def konfirmasi_pesanan(idkaryawan):
     kursor, conn = koneksiDB()
     query1 = "SELECT id_pesanan, nama_pemesan from pesanan where status_pesanan = 'Diantar' order by id_pesanan"
@@ -1966,8 +1965,9 @@ def konfirmasi_pesanan(idkaryawan):
     from pesanan p
     join detail_pesanan dp on p.id_pesanan=dp.pesanan_id_pesanan
     join produk pr on dp.produk_id_produk = pr.id_produk 
-    where p.status_pesanan = 'Diterima' and id_pesanan = %s
+    where id_pesanan = %s
     '''
+
     while True:
         try:
             clear()
@@ -2009,9 +2009,12 @@ def konfirmasi_pesanan(idkaryawan):
             
             #Menampilkan Nama Pemesan & No Telp
             query_info = '''
-            SELECT p.nama_pemesan AS nama,c.no_telp AS no_telp
+            SELECT p.nama_pemesan AS nama,c.no_telp AS no_telp, ap.jalan_pesanan as alamat, a.nama_area, t.metode_pembayaran
             FROM pesanan p
             JOIN customer c ON p.customer_id_customer = c.id_customer
+            JOIN alamat_pesanan ap on ap.id_alamat_pesanan = p.alamat_pesanan_id_alamat_pesanan
+            JOIN area a on a.id_area = ap.area_id_area
+            JOIN transaksi t on t.id_transaksi = p.transaksi_id_transaksi
             WHERE p.id_pesanan = %s
             '''
             query_total_harga = """
@@ -2033,32 +2036,49 @@ def konfirmasi_pesanan(idkaryawan):
                 
             kursor.execute(query_info, (input_id,))
             hasil = kursor.fetchone()
-            nama, no_telp = hasil
+            nama, no_telp, alamat_pesanan, area, metode_transaksi = hasil
 
             print("\n========== DATA PEMESAN ============")
-            print(f"Nama Pemesan : {nama}")
-            print(f"No Telp      : {no_telp}")
-            print(f"Total Harga  : {harga_total}")
+            print(f"Nama Pemesan      : {nama}")
+            print(f"No Telp           : {no_telp}")
+            print(f"Alamat Pesanan    : {alamat_pesanan}")
+            print(f"Area Pesanan      : {area}")
+            print(f"Total Harga       : {harga_total}")
+            print(f"Metode Trnsaksi   : {metode_transaksi}")
             print("====================================\n")
-            
-            #Insert DB tanggal
-            tanggal_sekarang = dt.date.today()
-            queryy = "insert into pengantar (tanggal_pengantar, karyawan_id_karyawan) VALUES (%s, %s) returning id_pengantar"
-            kursor.execute(queryy, (tanggal_sekarang, id_pengantar))
-            id_pengantar_asli = kursor.fetchone()
-            id_pengantar_asli = id_pengantar_asli[0]
-            
-            #Update Status
-            kursor.execute(query2, (id_pengantar_asli,input_id))
-            conn.commit()
-            print ("Pesanan sudah diterima!!")  
-            enter()
-            
             #Menampilkan Pesanan yang sudah selesai
             kursor.execute(query4, (input_id,))
             data_pesanan = kursor.fetchall()
             header4 = [d[0] for d in kursor.description]
             print (tabulate(data_pesanan, headers=header4, tablefmt='psql'))
+            pilih = questionary.select(
+            "Apakah Kamu Mau konfirmasi pesanan bahwa pesanan sudah sampai atau cuma melihat detail pesanan:",
+            choices=['Konfirmasi Pesanan Sampai', 'Lihat detail']).ask()
+            if pilih == 'Konfirmasi Pesanan Sampai':
+                #Insert DB tanggal
+                tanggal_sekarang = dt.date.today()
+                queryy = "insert into pengantar (tanggal_pengantar, karyawan_id_karyawan) VALUES (%s, %s) returning id_pengantar"
+                kursor.execute(queryy, (tanggal_sekarang, id_pengantar))
+                id_pengantar_asli = kursor.fetchone()
+                id_pengantar_asli = id_pengantar_asli[0]
+                
+                
+                #update transaksi
+                quwery_idTransaksi = "select transaksi_id_transaksi from pesanan where id_pesanan = %s"
+                quwery = "update transaksi set status_transaksi = 'Lunas' where id_transaksi =%s"
+                kursor.execute(quwery_idTransaksi, (input_id,))
+                id_transaksi = kursor.fetchone()
+                id_transaksi = id_transaksi[0]
+                kursor.execute(quwery, (id_transaksi,))
+                
+                #Update Status
+                kursor.execute(query2, (id_pengantar_asli,input_id))
+                conn.commit()
+                print ("Pesanan sudah diterima!!")  
+                enter()
+            elif pilih == "Lihat detail":
+                break
+            
             
             #Pilihan KAryawan
             pilih = questionary.select(
@@ -2074,7 +2094,6 @@ def konfirmasi_pesanan(idkaryawan):
     
     kursor.close()
     conn.close()
-
 
 def menu_karyawan(idkaryawan):
     kursor, conn = koneksiDB()
