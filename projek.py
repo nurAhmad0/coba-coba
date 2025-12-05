@@ -1791,12 +1791,10 @@ def update_stock(idkaryawan):
                     id_produk = int(input("Masukan id Produk:  "))
                     if id_produk not in data_list:
                         print ("ID produk tidak ditemukan")
-                        enter()
                         continue
                 except Exception as e:
                     print (f"Terjadi Kesalahan : {e}")
                     print("Input harus berupa Angka")
-                    enter()
                     continue
                 break
             kursor.execute("SELECT stock from produk where id_produk = %s", (id_produk,))
@@ -1880,7 +1878,6 @@ def kelola_pesanan_cust(idkaryawan):
                 input_id = int (input("Pilih ID pesanan yang mau diproses: "))
                 while input_id not in data_list:
                     print ("ID Pesanan yang anda masukan salah..")
-                    input_id = int (input("Pilih ID pesanan yang mau diproses: "))
                     continue
             except ValueError:
                 print ("Inputan harus berupa angka!!")
@@ -1999,7 +1996,6 @@ def konfirmasi_pesanan(idkaryawan):
                     input_id = int (input("Pilih ID pesanan yang mau dikonfirmasi: "))
                     if input_id not in data_list:
                         print ("ID Pesanan yang anda masukan salah..")
-                        input_id = int (input("Pilih ID pesanan yang mau dikonfirmasi: "))
                         continue
                     break
                 except ValueError:
@@ -2053,7 +2049,7 @@ def konfirmasi_pesanan(idkaryawan):
             print (tabulate(data_pesanan, headers=header4, tablefmt='psql'))
             pilih = questionary.select(
             "Apakah Kamu Mau konfirmasi pesanan bahwa pesanan sudah sampai atau cuma melihat detail pesanan:",
-            choices=['Konfirmasi Pesanan Sampai', 'Lihat detail']).ask()
+            choices=['Konfirmasi Pesanan Sampai', 'Lihat Detail Saja']).ask()
             if pilih == 'Konfirmasi Pesanan Sampai':
                 #Insert DB tanggal
                 tanggal_sekarang = dt.date.today()
@@ -2076,7 +2072,7 @@ def konfirmasi_pesanan(idkaryawan):
                 conn.commit()
                 print ("Pesanan sudah diterima!!")  
                 enter()
-            elif pilih == "Lihat detail":
+            elif pilih == "Lihat Detail Saja":
                 break
             
             
