@@ -1015,7 +1015,7 @@ def hapus_produk(idakun):
     kursor, conn = koneksiDB()
     query1 = "select id_produk, nama_produk, harga, stock from produk where status_produk = 'Aktif' order by id_produk;"
     query2 = "select id_produk from produk where status_produk = 'Aktif' order by id_produk;"
-    query3 = "update produk set status_produk = 'Tidak Aktif' and stock = 0 where id_produk = %s"
+    query3 = "update produk set status_produk = 'Tidak Aktif', stock = 0 where id_produk = %s"
     while True:
         try:
             clear()
