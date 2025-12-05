@@ -211,7 +211,7 @@ def cek_nama(nama):
                 print('nama Tidak Sesuai Harus Terdiri Dari Huruf dan Angka')
                 nama = input('Masukkan Nama Karyawan >> ')
                 continue
-            if not nama.isalpha():
+            if any(s.isdigit() for s in nama):
                 print("nama tidak boleh pakai angka")
                 nama = input('Masukkan Nama Karyawan >> ')
                 continue
@@ -238,7 +238,7 @@ def cek_username(username):
                 print('Username Tidak Sesuai Harus Terdiri Dari Huruf')
                 username = input('Masukkan Username: ')
                 continue
-            if not username.isalpha():
+            if username.isdigit():
                 print("username tidak boleh pakai angka semua")
                 username = input('Masukkan Username: ')
                 continue
@@ -279,7 +279,7 @@ def cek_nama_produk(nama_produk):
                 print("nama_produk minimal 3 karakter")
                 nama_produk = input("Masukkan nama_produk: ")
                 continue
-            if not nama_produk.isalpha():
+            if any(c.isdigit() for c in nama_produk):
                 print("Nama Tidak Boleh Ada Angka")
                 nama_produk = input("Masukkan nama_produk: ")
                 continue
@@ -704,7 +704,7 @@ def produk_laris_1bulan(idakun):
 
 def produk_kurang_1minggu(idakun):
     kursor, conn = koneksiDB()
-    query1 = "select p.nama_produk, sum(dp.jumlah_produk) as jumlah_terjual, sum(dp.harga * dp.Jumlah_produk) as jumlah_penghasilan from produk p join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk join pesanan ps on ps.id_pesanan = dp.pesanan_id_pesanan join pengantar pe on ps.pengantar_id_pengantar = pe.id_pengantar where p.status_produk = 'Aktif' and pe.tanggal_pengantar <= %s and pe.tanggal_pengantar >= %s group by p.nama_produk order by jumlah_terjual asc limit 5"
+    query1 = "select p.nama_produk, sum(dp.jumlah_produk) as jumlah_terjual, sum(dp.harga * dp.Jumlah_produk) as jumlah_penghasilan from produk p left join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk left join pesanan ps on ps.id_pesanan = dp.pesanan_id_pesanan left join pengantar pe on ps.pengantar_id_pengantar = pe.id_pengantar where p.status_produk = 'Aktif' and pe.tanggal_pengantar <= %s and pe.tanggal_pengantar >= %s group by p.nama_produk order by jumlah_terjual asc limit 5"
     try:
         clear()
         logo()
@@ -725,7 +725,7 @@ def produk_kurang_1minggu(idakun):
 
 def produk_kurang_1bulan(idakun):
     kursor, conn = koneksiDB()
-    query1 = "select p.nama_produk, sum(dp.jumlah_produk) as jumlah_terjual, sum(dp.harga * dp.Jumlah_produk) as jumlah_penghasilan from produk p join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk join pesanan ps on ps.id_pesanan = dp.pesanan_id_pesanan join pengantar pe on ps.pengantar_id_pengantar = pe.id_pengantar where p.status_produk = 'Aktif' and pe.tanggal_pengantar <= %s and pe.tanggal_pengantar >= %s group by p.nama_produk order by jumlah_terjual asc limit 5"
+    query1 = "select p.nama_produk, sum(dp.jumlah_produk) as jumlah_terjual, sum(dp.harga * dp.Jumlah_produk) as jumlah_penghasilan from produk p left join detail_pesanan dp on dp.Produk_ID_Produk = p.ID_Produk left join pesanan ps on ps.id_pesanan = dp.pesanan_id_pesanan left join pengantar pe on ps.pengantar_id_pengantar = pe.id_pengantar where p.status_produk = 'Aktif' and pe.tanggal_pengantar <= %s and pe.tanggal_pengantar >= %s group by p.nama_produk order by jumlah_terjual asc limit 5"
     try:
         clear()
         logo()
@@ -750,7 +750,7 @@ def lihat_produkA(idakun):
     print(f'MENU ADMIN >> LIHAT PRODUK'.center(86))
     batas()
     kursor, conn = koneksiDB()
-    query = "select * from produk order by status_produk"
+    query = "select * from produk order by status_produk, id_produk"
     try:
         kursor.execute(query)
         data = kursor.fetchall()
@@ -942,15 +942,15 @@ def tambah_karyawan(idakun):
         password_karyawan = cek_password(password_karyawan)
         jabatan = questionary.select(
         "Jabatan Karyawan:",
-        choices=["Pengantar", "Kasir", "kebersihan", "koki"]
+        choices=["Pengantar", "Kasir", "Kebersihan", "Koki"]
         ).ask()
         if jabatan == "Pengantar":
             jabatan_id = 1
-        elif jabatan == "kasir":
+        elif jabatan == "Kasir":
             jabatan_id = 2
-        elif jabatan == "kebersihan":
+        elif jabatan == "Kebersihan":
             jabatan_id = 3
-        elif jabatan == "koki":
+        elif jabatan == "Koki":
             jabatan_id = 4
         query1 = "insert into karyawan (nama_karyawan, tanggal_lahir, email, no_telp, jabatan_id_jabatan, akun_id_akun, status_karyawan) values (%s, %s, %s, %s, %s, %s, 'Aktif');"
         query2 = "insert into akun (username, password, role_id_role) values (%s, %s, 2) returning id_akun;"
@@ -1015,7 +1015,7 @@ def hapus_produk(idakun):
     kursor, conn = koneksiDB()
     query1 = "select id_produk, nama_produk, harga, stock from produk where status_produk = 'Aktif' order by id_produk;"
     query2 = "select id_produk from produk where status_produk = 'Aktif' order by id_produk;"
-    query3 = "update produk set status_produk = 'Tidak Aktif' where id_produk = %s"
+    query3 = "update produk set status_produk = 'Tidak Aktif' and stock = 0 where id_produk = %s"
     while True:
         try:
             clear()
