@@ -1316,12 +1316,14 @@ def lihat_satu_pesanan(idakun, idpesanan):
         kursor.execute(query7, (idpesanan,))
         harga_produk = kursor.fetchone()
         harga_produk = harga_produk[0]
-        harga = harga_antar+harga_produk
         kursor.execute(query8, (idpesanan,))
         diskon_harga = kursor.fetchone()
         if diskon_harga is None:
             diskon_harga = (0,)
-        diskon_harga = diskon_harga[0]
+            harga = harga_antar+harga_produk
+        elif diskon_harga is not None:
+            diskon_harga = diskon_harga[0]
+            harga = harga_antar+(harga_produk * ((100 - diskon_harga) / 100))
         print(f"Diskon diterima : {diskon_harga}")
         print(f"Harga Ongkir : {harga_antar}")
         print(f"Total Harga :{harga}")
@@ -2028,7 +2030,7 @@ def konfirmasi_pesanan(idkaryawan):
             if harga[1] is None:
                 harga_total = harga[0] + harga[2]
             elif harga[1] is not None:
-                harga_total = (harga[0] + harga[2]) * ((100 - harga[1]) / 100)
+                harga_total = harga[0] + (harga[2] * ((100 - harga[1]) / 100))
                 
             kursor.execute(query_info, (input_id,))
             hasil = kursor.fetchone()
