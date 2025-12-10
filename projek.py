@@ -1908,7 +1908,7 @@ def kelola_pesanan_cust(idkaryawan):
             if harga[1] is None:
                 harga_total = harga[0] + harga[2]
             elif harga[1] is not None:
-                harga_total = (harga[0] + harga[2]) * ((100 - harga[1]) / 100)
+                harga_total = harga[0] + (harga[2] * ((100 - harga[1]) / 100))
             kursor.execute(query_info, (input_id,))
             hasil = kursor.fetchone()
             nama, no_telp = hasil
