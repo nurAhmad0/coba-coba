@@ -204,7 +204,7 @@ def tanggal():
             print(f"Terjadi Kesalahan : {e}")
 
 def cek_nama(nama):
-    simbol =['!','@','#','$','%','^','&','*','(',')',',']
+    simbol =['!','@','#','$','%','^','&','*','(',')',',','_','-','=','[',']','~','+','{','}','<','>','?','/']
     while True:
         try:
             if any(s in nama for s in simbol):
@@ -231,7 +231,7 @@ def cek_nama(nama):
 
 def cek_username(username):
     kursor, conn = koneksiDB()
-    simbol =['!','@','#','$','%','^','&','*','(',')',',']
+    simbol =['!','@','#','$','%','^','&','*','(',')',',','_','-','=','[',']','~','+','{','}','<','>','?','/']
     while True:
         try:
             if any(s in username for s in simbol):
@@ -268,7 +268,7 @@ def cek_username(username):
 
 def cek_nama_produk(nama_produk):
     kursor, conn = koneksiDB()
-    simbol =['!','@','#','$','%','^','&','*','(',')',',']
+    simbol =['!','@','#','$','%','^','&','*','(',')',',','_','-','=','[',']','~','+','{','}','<','>','?','/']
     while True:
         try:
             if any(s in nama_produk for s in simbol):
@@ -2149,97 +2149,3 @@ def menu_karyawan(idkaryawan):
 
     
 login()
-
-
-
-
-
-
-#bagaimana jika melebihi stock
-#cod atau bagaiaman kalau pesanan
-#kalau cod berari ubah dari belum bayatr menjadi sudah bayar
-
-
-
-
-# kursor.execute(query1)
-# data = kursor.fetchall()
-# header= [d[0]for d in kursor.description]
-#             print (tabulate(data, headers=header, tablefmt='psql'))
-#             kursor.execute(query2)
-#             data = kursor.fetchall()
-#             data_list = [i[0] for i in data]
-#             print('======Id Karyawan======')
-#             for i in data:
-#                 print(f'id karyawan {i[0]}')
-#             while True:
-#                 try:
-#                     admin_input = int(input('Pilih Id Produk yang mau dihilangkan: '))
-#                     while True:
-#                         if admin_input not in data_list:
-#                             print('Id Karyawan yang anda masukkan salah')
-#                             admin_input = int(input('Pilih Id Produk yang mau dihilangkan: '))
-#                             continue
-#                         break
-#                 except ValueError:
-#                     print("Input harus berupa angka!")
-#                     continue
-#                 break
-#             kursor.execute(query3, (admin_input,))
-#             conn.commit()
-#             print('Pemecatan Berhasil')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # print('berhasil')
-# # cursor = conn.cursor()
-# # query = "SELECT * FROM public.karyawan;"
-# # cursor.execute(query)
-# # data = cursor.fetchall()
-# # for row in data:
-# #     print(row)
-
-# # cursor.close()
-# # conn.close()
-# # query = "SELECT * FROM public.karyawan;"
-# # df = pd.read_sql(query, conn)
-# # conn.close()
-# # print(df.head())
